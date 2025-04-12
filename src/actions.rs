@@ -24,26 +24,24 @@ fn update(message: Message, model: &mut Model) -> Option<Message> {
     // value as us then combine with us and increment value set j+1 to 
     // empty then increment j, some value not x and x is empty then swap
     // with i increment i and repeat.
-pub fn compress_left(grid: &mut Grid<SquareValue>, start: Vec2) -> Result<()> {
-    let mut i = 0;
-    let mut j = i + 1;
-    while i < 4 {
-        let a = Vec2::new(i,y);
-        let v = grid.at(a).ok_or(SquareValue::Empty);
-        let b = Vec2::new(j,y);
-        match grid.at(b) {
-            Some(SquareValue::Empty) => { j += 1; },
+pub fn compress(grid: &mut Grid<u16>, start: Vec2, direction: Vec2) -> Result<()> {
+    let mut i = start;
+    let mut j = i + direction;
+    while let Some(v) = grid.at(i) {
+        match grid.at(j) {
             Some(sv) => { 
-                if v == SquareValue::Empty {
-                    grid.swap(a,b) 
+                if v == 0 && sv != 0 {
+                    grid.swap(i,j);
+                    i += direction;
                 } else if sv == v { 
-                    v += 1;
-                    *sv = SquareValue::Empty;
+                    *v *= 2;
+                    *sv = 0;
+                    i += direction;
                 } 
-                i = j;
+                j += direction;
             }, 
             None => {  
-                i = j;
+                break;
             },
         }
     }

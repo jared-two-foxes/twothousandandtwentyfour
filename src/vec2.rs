@@ -1,3 +1,5 @@
+use std::ops::{Add, AddAssign};
+
 // A 2-dimensional distinct coordinate
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Vec2 {

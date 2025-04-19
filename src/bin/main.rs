@@ -42,10 +42,10 @@ fn handle_event(model: &App) -> anyhow::Result<Option<Message>> {
 
 fn handle_key(key: event::KeyEvent) -> Option<Message> {
     match key.code {
-        KeyCode::Left => Some(ModelMessage::Compress(Vec2::LEFT)),
-        KeyCode::Right => Some(ModelMessage::Compress(Vec2::RIGHT)),
-        KeyCode::Up => Some(ModelMessage::Compress(Vec2::UP)),
-        KeyCode::Down => Some(ModelMessage::Compress(Vec2::DOWN)),
+        KeyCode::Left => Some(ModelMessage::Compress(Vec2::new(-1,0))),
+        KeyCode::Right => Some(ModelMessage::Compress(Vec2::new(1,0))),
+        KeyCode::Up => Some(ModelMessage::Compress(Vec2::new(0,1))),
+        KeyCode::Down => Some(ModelMessage::Compress(Vec2::new(0,-1))),
         KeyCode::Char('q') => Some(Message::Quit),
         _ => None,
     }

@@ -10,11 +10,12 @@ enum Message {
 fn update(message: Message, model: &mut Model) -> Option<Message> {
   match message {
     Message::Compress(dir) => {
-       compress_left(
+       compress(
          model.grid,
-         vec2::new(0,0));
+         dir);
        None
-    }  
+    },
+    _ => None,  
   }
 } 
 

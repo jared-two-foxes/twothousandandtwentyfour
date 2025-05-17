@@ -6,6 +6,30 @@ struct Grid<T> {
     cols: usize,
 }
 
+struct GridRow<'a, T> {
+    grid: &Grid<T>,
+    row: usize,
+    index: usize,
+}
+
+impl<'a, T> Iterator for GridRow<'a, T> {
+    type Item = T;
+  
+    pub fn next(&mut self) -> Option<&Item> {
+      if self.row > self.grid.rows() {
+        return None;
+      }
+      let n = grid.get(self.row, self.index);
+      self.index += 1;
+      n
+    }
+}
+
+struct GridColumn<'a> {
+    grid: &Grid,
+    column: usize,
+}
+
 impl<T> Grid<T> {
   pub fn new(rows: usize, cols: usize) -> Self 
   where T: Default {
@@ -16,6 +40,10 @@ impl<T> Grid<T> {
         rows,
         cols
       }
+  }
+  
+  pub fn rows(&self) -> Vec<GridRow> {
+  
   }
   
   #[inline]

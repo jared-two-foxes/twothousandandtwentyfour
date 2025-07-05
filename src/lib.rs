@@ -1,7 +1,7 @@
-use crate::{ 
-    vec2::Vec2, 
-    grid::Grid
-    command::Model,
-}
+pub mod action;
+pub mod grid;
+pub mod model;
+pub mod vec2;
  
-pub use command::Model; 
+pub use model::Model; 
+pub use action::Message;

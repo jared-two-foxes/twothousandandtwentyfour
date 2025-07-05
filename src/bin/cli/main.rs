@@ -1,8 +1,12 @@
-use TwentyFortyEight::{Model, Message as ModelMessage};
+use twentyfourtyeight::{
+    Model, 
+    Message as ModelMessage
+};
 
 #[derive(Default)]
 struct App {
   model: Model,
+  high_score: u32,
   should_quit: bool,
 }
 
@@ -11,6 +15,10 @@ fn main() -> Result<()> {
     let mut app = App::default();
     
     loop {
+        if app.should_quit {
+            break;
+        }
+        
         terminal.draw(|f| view(&mut model, f))?;
         
         let current_msg = handle_event(&app)?;
@@ -52,5 +60,16 @@ fn handle_key(key: event::KeyEvent) -> Option<Message> {
 }
 
 fn update(app: &mut App, message: Message) -> Option<Message> {
-  None
+    match message {
+        Message::Quit => { 
+            app.quit = true;
+            None
+        },
+        Message::ModelMessage(model_message) => { 
+            twentyfourtyeight::update(
+                &mut app.model, 
+                model_message)
+                .map(|m| Message::ModelMessage(m))
+        }
+    }
 }

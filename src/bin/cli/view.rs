@@ -28,7 +28,7 @@ fn draw_row(frame: &mut Frame, area: Area, i: usize, grid: &Grid<u16>) {
   for j in 0..4 {
     frame.render_widget(
       Paragraph::new(
-        grid.get(i,j).unwrap().to_string()),
+        grid.get(i,j).unwrap  ().to_string()),
       areas[j] );
   } 
 }

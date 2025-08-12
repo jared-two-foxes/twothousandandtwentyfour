@@ -43,7 +43,7 @@ impl<T> Grid<T> {
   }
   
   pub fn rows(&self) -> Vec<GridRow> {
-  
+      unimplemented!();
   }
   
   #[inline]

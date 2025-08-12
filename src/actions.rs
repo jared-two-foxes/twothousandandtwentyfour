@@ -27,7 +27,8 @@ pub fn update(model: &mut Model, message: Message) -> Option<Message> {
         if highest_tile(model) == 11 {
             // player won!  
             // transition game state?
-        }
+        } 
+        // else if no available moves remain?
         
         None
     },
@@ -50,27 +51,41 @@ fn compress_left(model: &mut Model) {
         score);
 }
 
-// going to start on the first square (i, with value x) on the left, 
-// compare it with the next square to its right (j); if we hit an 
-// empty space we'll try the next square (j+1), if its got the same 
-// value as us then combine with us and increment value set j+1 to 
-// empty then increment j, some value not x and x is empty then swap
-// with i increment i and repeat.
-fn compress<T>(collection: impl IntoIterator<Item=T>, inserter: InserterPolicy) -> u32 {
-    let mut score = 0;
-    let stack = Vec::with_capacity(4);
-    while let Some(v) = collection.into_iter().find(|&&x| x != 0) {
-        if let Some(n) = stack.last_mut() {
-            if n == v {
-                *n += 1;
-                score += *n;
-            } else {
-                inserter(stack, *v);
-            }
+fn next_left(row: &[u16], i: usize) -> Option<usise> {
+    while i < row.len() {
+        if row[i] != 0 {
+            return Some(i);
         } else {
-            inserter(stack, *v);
+            i += 1;
         }
     }
-    stack.resize(4, 0);
-    (stack, score)
-} 
+    None
+}
+
+fn next_right(row: &[u16], i: isize) -> Option<isize> {
+
+}
+
+fn compress_left(row: &mut [u16]) {
+    let mut i = 0;
+    let mut j = 1;
+    while i < row.len() {
+        match next_valid(row, j) {
+            Some(x) => {
+                if row[i] != 0 {
+                    if row[i] == row[x] {
+                        row[i] += 1;
+                        row[x] = 0;
+                        j = x + 1;
+                    }
+                    i += 1;
+                } else {
+                    row[i] = row[x];
+                    row[x] = 0;  
+                    j = x + 1;
+                }
+            },
+            None => { break; },
+        }
+    }
+}

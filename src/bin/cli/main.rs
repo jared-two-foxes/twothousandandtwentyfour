@@ -5,16 +5,41 @@ use twentyfourtyeight::{actions::Direction, Message as ModelMessage, Model};
 
 mod view;
 
-#[derive(Default)]
 struct App {
     model: Model,
     high_score: u32,
     should_quit: bool,
 }
 
+impl App {
+    pub fn new() -> Self {
+        App {
+            model: Model::new(),
+            high_score: 0,
+            should_quit: false,
+        }
+    }
+
+    // One thing I like about free functions is that it makes it clear at the call site if
+    // something is being consumed, borrowed, or mutably borrowed which is not always clear
+    // otherwise
+    fn update(&mut self, message: Message) -> Option<Message> {
+        match message {
+            Message::Quit => {
+                self.should_quit = true;
+                None
+            }
+            Message::ModelMessage(model_message) => {
+                twentyfourtyeight::actions::update(&mut self.model, model_message)
+                    .map(|m| Message::ModelMessage(m))
+            }
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let mut terminal = ratatui::init();
-    let mut app = App::default();
+    let mut app = App::new();
 
     loop {
         if app.should_quit {
@@ -26,7 +51,7 @@ fn main() -> Result<()> {
         let mut current_msg = handle_event(&app)?;
 
         while current_msg.is_some() {
-            current_msg = update(&mut app, current_msg.unwrap());
+            current_msg = app.update(current_msg.unwrap());
         }
     }
 
@@ -34,8 +59,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// And rename this like ApplicaitonMessage or something?
 enum Message {
-    ModelMessage(ModelMessage),
+    ModelMessage(ModelMessage), //< Maybe rename this game message.
     Quit,
 }
 
@@ -64,18 +90,5 @@ fn handle_key(key: event::KeyEvent) -> Option<Message> {
         ))),
         KeyCode::Char('q') => Some(Message::Quit),
         _ => None,
-    }
-}
-
-fn update(app: &mut App, message: Message) -> Option<Message> {
-    match message {
-        Message::Quit => {
-            app.should_quit = true;
-            None
-        }
-        Message::ModelMessage(model_message) => {
-            twentyfourtyeight::actions::update(&mut app.model, model_message)
-                .map(|m| Message::ModelMessage(m))
-        }
     }
 }

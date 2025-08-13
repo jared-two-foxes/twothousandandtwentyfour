@@ -35,7 +35,6 @@ pub struct RowMut<'a, T> {
 }
 
 impl<'a, T> RowMut<'a, T> {
-
     #[inline]
     fn get(&self, index: usize) -> &T {
         self.grid.value(self.row, index)
@@ -82,7 +81,6 @@ impl<'a, T> Iterator for GridRow<'a, T> {
     }
 }*/
 
-
 pub struct Column<'a, T> {
     grid: &'a Grid<T>,
     column: usize,
@@ -106,13 +104,17 @@ impl<'a, T> Index<usize> for Column<'a, T> {
 }
 
 impl<T> Grid<T> {
-    pub fn new(rows: usize, cols: usize) -> Self
+    pub fn new(r: usize, c: usize) -> Self
     where
         T: Default + Clone,
     {
         let mut data = Vec::new();
-        data.resize(rows * cols, Default::default());
-        Grid { data, rows, cols }
+        data.resize(r * c, Default::default());
+        Grid {
+            data,
+            rows: r,
+            cols: c,
+        }
     }
 
     pub fn width(&self) -> usize {
@@ -139,7 +141,7 @@ impl<T> Grid<T> {
         assert!(col < self.cols, "Index out of bounds");
         Column {
             grid: self,
-            column: col
+            column: col,
         }
     }
 

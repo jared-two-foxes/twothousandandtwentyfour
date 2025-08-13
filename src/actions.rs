@@ -1,5 +1,4 @@
 use crate::model::Model;
-//use crate::grid::Grid;
 
 use std::ops::{Index, IndexMut};
 
@@ -35,43 +34,51 @@ pub fn update(model: &mut Model, message: Message) -> Option<Message> {
     }
 }
 
-fn highest_tile(model: &Model) -> u8 {
+fn highest_tile(_model: &Model) -> u8 {
     0
 }
 
 fn compress_left(model: &mut Model) {
     let len = model.grid.width();
-    let rows = model.grid.rows_mut().iter_mut().fold(Vec::new(), |mut list, mut row| {
-        let new_row = compress_row_left(row, len);
-        list.push(new_row);
-        list
-    });
+    let _rows = model
+        .grid
+        .rows_mut()
+        .iter_mut()
+        .fold(Vec::new(), |mut list, row| {
+            let new_row = compress_row_left(row, len);
+            list.push(new_row);
+            list
+        });
 
     //model.update(Grid::from_rows(rows), score);
 }
 
 fn compress_right(model: &mut Model) {
     let len = model.grid.width();
-    let rows = model.grid.rows_mut().iter_mut().fold(Vec::new(), |mut list, row| {
-        let new_row = compress_row_right(row, len);
-        list.push(new_row);
-        list
-    });
+    let _rows = model
+        .grid
+        .rows_mut()
+        .iter_mut()
+        .fold(Vec::new(), |mut list, row| {
+            let new_row = compress_row_right(row, len);
+            list.push(new_row);
+            list
+        });
 
     //model.update(Grid::from_rows(rows), score);
 }
 
-fn compress_up(model: &mut Model) {
+fn compress_up(_model: &mut Model) {
     unimplemented!();
 }
 
-fn compress_down(model: &Model) {
+fn compress_down(_model: &Model) {
     unimplemented!();
 }
 
 fn next_left<T>(row: &T, mut i: usize, n: usize) -> Option<usize>
 where
-    T: Index<usize, Output = u16>
+    T: Index<usize, Output = u16>,
 {
     while i < n {
         if row[i] != 0 {
@@ -85,7 +92,7 @@ where
 
 fn compress_row_left<T>(row: &mut T, n: usize)
 where
-    T: IndexMut<usize, Output = u16>
+    T: IndexMut<usize, Output = u16>,
 {
     let mut i = 0;
     let mut j = 1;
@@ -112,16 +119,16 @@ where
     }
 }
 
-fn next_right<T>(row: &T, mut i: usize, n: usize) -> Option<usize>
+fn next_right<T>(_row: &T, mut _i: usize, _n: usize) -> Option<usize>
 where
-    T: Index<usize, Output = u16>
+    T: Index<usize, Output = u16>,
 {
-    None
+    unimplemented!()
 }
 
-fn compress_row_right<T>(row: &mut T, n: usize)
+fn compress_row_right<T>(_row: &mut T, _n: usize)
 where
-    T: IndexMut<usize, Output = u16>
+    T: IndexMut<usize, Output = u16>,
 {
     unimplemented!()
 }

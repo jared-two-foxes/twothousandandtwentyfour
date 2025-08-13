@@ -1,6 +1,7 @@
 use std::ops::Index;
 use std::ops::IndexMut;
 
+#[derive(Default)]
 pub struct Grid<T> {
     data: Vec<T>,
     rows: usize,
@@ -82,7 +83,7 @@ impl<'a, T> Iterator for GridRow<'a, T> {
 }*/
 
 
-struct Column<'a, T> {
+pub struct Column<'a, T> {
     grid: &'a Grid<T>,
     column: usize,
 }
@@ -128,6 +129,18 @@ impl<T> Grid<T> {
 
     pub fn rows_mut<'a>(&self) -> Vec<RowMut<'a, T>> {
         unimplemented!();
+    }
+
+    pub fn columns<'a>(&self) -> Vec<Column<'a, T>> {
+        unimplemented!()
+    }
+
+    pub fn column<'a>(&'a self, col: usize) -> Column<'a, T> {
+        assert!(col < self.cols, "Index out of bounds");
+        Column {
+            grid: self,
+            column: col
+        }
     }
 
     #[inline]

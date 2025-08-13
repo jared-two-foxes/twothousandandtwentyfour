@@ -1,40 +1,42 @@
-use twentyfourtyeight::{
-    Model, 
-    Message as ModelMessage
-};
+use anyhow::Result;
+use crossterm::event::{self, Event, KeyCode};
+use std::time::Duration;
+use twentyfourtyeight::{actions::Direction, Message as ModelMessage, Model};
+
+mod view;
 
 #[derive(Default)]
 struct App {
-  model: Model,
-  high_score: u32,
-  should_quit: bool,
+    model: Model,
+    high_score: u32,
+    should_quit: bool,
 }
 
 fn main() -> Result<()> {
-    let terminal = ratatui::init();
+    let mut terminal = ratatui::init();
     let mut app = App::default();
-    
+
     loop {
         if app.should_quit {
             break;
         }
-        
-        terminal.draw(|f| view(&mut model, f))?;
-        
-        let current_msg = handle_event(&app)?;
-        
+
+        terminal.draw(|f| view::view(&mut app.model, f))?;
+
+        let mut current_msg = handle_event(&app)?;
+
         while current_msg.is_some() {
-            current_msg = update(&mut model, current_msg.unwrap());
-        } 
+            current_msg = update(&mut app, current_msg.unwrap());
+        }
     }
 
     ratatui::restore();
-    app_result
+    Ok(())
 }
 
-struct Message {
-  ModelMessage(ModelMessage),
-  Quit,
+enum Message {
+    ModelMessage(ModelMessage),
+    Quit,
 }
 
 fn handle_event(model: &App) -> anyhow::Result<Option<Message>> {
@@ -50,10 +52,16 @@ fn handle_event(model: &App) -> anyhow::Result<Option<Message>> {
 
 fn handle_key(key: event::KeyEvent) -> Option<Message> {
     match key.code {
-        KeyCode::Left => Some(ModelMessage::Compress(Vec2::new(-1,0))),
-        KeyCode::Right => Some(ModelMessage::Compress(Vec2::new(1,0))),
-        KeyCode::Up => Some(ModelMessage::Compress(Vec2::new(0,1))),
-        KeyCode::Down => Some(ModelMessage::Compress(Vec2::new(0,-1))),
+        KeyCode::Left => Some(Message::ModelMessage(ModelMessage::Compress(
+            Direction::Left,
+        ))),
+        KeyCode::Right => Some(Message::ModelMessage(ModelMessage::Compress(
+            Direction::Right,
+        ))),
+        KeyCode::Up => Some(Message::ModelMessage(ModelMessage::Compress(Direction::Up))),
+        KeyCode::Down => Some(Message::ModelMessage(ModelMessage::Compress(
+            Direction::Down,
+        ))),
         KeyCode::Char('q') => Some(Message::Quit),
         _ => None,
     }
@@ -61,14 +69,12 @@ fn handle_key(key: event::KeyEvent) -> Option<Message> {
 
 fn update(app: &mut App, message: Message) -> Option<Message> {
     match message {
-        Message::Quit => { 
-            app.quit = true;
+        Message::Quit => {
+            app.should_quit = true;
             None
-        },
-        Message::ModelMessage(model_message) => { 
-            twentyfourtyeight::update(
-                &mut app.model, 
-                model_message)
+        }
+        Message::ModelMessage(model_message) => {
+            twentyfourtyeight::actions::update(&mut app.model, model_message)
                 .map(|m| Message::ModelMessage(m))
         }
     }

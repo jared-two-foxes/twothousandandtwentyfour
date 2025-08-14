@@ -40,40 +40,30 @@ fn highest_tile(_model: &Model) -> u8 {
 
 fn compress_left(model: &mut Model) {
     let len = model.grid.width();
-    let _rows = model
-        .grid
-        .rows_mut()
-        .iter_mut()
-        .fold(Vec::new(), |mut list, row| {
-            let new_row = compress_row_left(row, len);
-            list.push(new_row);
-            list
-        });
-
-    //model.update(Grid::from_rows(rows), score);
+    for i in 0..model.grid.height() {
+        compress_row_left(&mut model.grid.row_mut(i), len);
+    }
 }
 
 fn compress_right(model: &mut Model) {
     let len = model.grid.width();
-    let _rows = model
-        .grid
-        .rows_mut()
-        .iter_mut()
-        .fold(Vec::new(), |mut list, row| {
-            let new_row = compress_row_right(row, len);
-            list.push(new_row);
-            list
-        });
-
-    //model.update(Grid::from_rows(rows), score);
+    for i in 0..model.grid.height() {
+        compress_row_right(&mut model.grid.row_mut(i), len);
+    }
 }
 
-fn compress_up(_model: &mut Model) {
-    unimplemented!();
+fn compress_up(model: &mut Model) {
+    let len = model.grid.height();
+    for i in 0..model.grid.width() {
+        compress_row_left(&mut model.grid.column_mut(i), len);
+    }
 }
 
-fn compress_down(_model: &Model) {
-    unimplemented!();
+fn compress_down(model: &mut Model) {
+    let len = model.grid.height();
+    for i in 0..model.grid.width() {
+        compress_row_right(&mut model.grid.column_mut(i), len);
+    }
 }
 
 fn next_left<T>(row: &T, mut i: usize, n: usize) -> Option<usize>

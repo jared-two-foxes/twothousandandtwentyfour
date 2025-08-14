@@ -103,6 +103,39 @@ impl<'a, T> Index<usize> for Column<'a, T> {
     }
 }
 
+pub struct ColumnMut<'a, T> {
+    grid: &'a mut Grid<T>,
+    column: usize,
+}
+
+impl<'a, T> ColumnMut<'a, T> {
+    #[inline]
+    #[must_use]
+    fn get(&self, index: usize) -> &T {
+        self.grid.value(index, self.column)
+    }
+
+    fn get_mut(&mut self, index: usize) -> &mut T {
+        self.grid.value_mut(index, self.column)
+    }
+}
+
+impl<'a, T> Index<usize> for ColumnMut<'a, T> {
+    type Output = T;
+
+    #[inline]
+    fn index(&self, index: usize) -> &T {
+        self.get(index)
+    }
+}
+
+impl<'a, T> IndexMut<usize> for ColumnMut<'a, T> {
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut T {
+        self.get_mut(index)
+    }
+}
+
 impl<T> Grid<T> {
     pub fn new(r: usize, c: usize) -> Self
     where
@@ -125,16 +158,24 @@ impl<T> Grid<T> {
         self.cols
     }
 
-    pub fn rows<'a>(&self) -> Vec<Row<'a, T>> {
-        unimplemented!();
+    pub fn row<'a>(&'a self, row: usize) -> Row<'a, T> {
+        assert!(row < self.rows, "Index out of bounds");
+        Row {
+            grid: self,
+            row,
+        }
     }
 
-    pub fn rows_mut<'a>(&self) -> Vec<RowMut<'a, T>> {
-        unimplemented!();
+    pub fn row_mut<'a>(&'a mut self, row: usize) -> RowMut<'a, T> {
+        assert!(row < self.rows, "Index out of bounds");
+        RowMut {
+            grid: self,
+            row,
+        }
     }
 
-    pub fn columns<'a>(&self) -> Vec<Column<'a, T>> {
-        unimplemented!()
+    pub fn rows<'a>(&'a self) -> Vec<Row<'a, T>> {
+        (0..self.rows).map(|i| Row { grid: self, row: i}).collect()
     }
 
     pub fn column<'a>(&'a self, col: usize) -> Column<'a, T> {
@@ -143,6 +184,18 @@ impl<T> Grid<T> {
             grid: self,
             column: col,
         }
+    }
+
+    pub fn column_mut<'a>(&'a mut self, col: usize) -> ColumnMut<'a, T> {
+        assert!(col < self.cols, "Index out of bounds");
+        ColumnMut {
+            grid: self,
+            column: col,
+        }
+    }
+
+    pub fn columns<'a>(&self) -> Vec<Column<'a, T>> {
+        unimplemented!()
     }
 
     #[inline]

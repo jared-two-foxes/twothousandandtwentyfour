@@ -1,4 +1,4 @@
-use crate::model::Model;
+use crate::model::{Model, State};
 
 use std::ops::{Index, IndexMut};
 
@@ -16,18 +16,21 @@ pub enum Message {
 pub fn update(model: &mut Model, message: Message) -> Option<Message> {
     match message {
         Message::Compress(dir) => {
-            match dir {
+            let value = match dir {
                 Direction::Left => compress_left(model),
                 Direction::Right => compress_right(model),
                 Direction::Up => compress_up(model),
                 Direction::Down => compress_down(model),
-            }
+            };
 
-            if highest_tile(model) == 11 {
-                // player won!
-                // transition game state?
+            model.score += value as u32;
+
+            // Fill a new square
+            model.generate_new_value();
+
+            if highest_tile(model) == 11 || model.check_for_valid_moves() {
+                model.state = State::Done;
             }
-            // else if no available moves remain?
 
             None
         }
@@ -38,35 +41,43 @@ fn highest_tile(_model: &Model) -> u8 {
     0
 }
 
-fn compress_left(model: &mut Model) {
+fn compress_left(model: &mut Model) -> u16 {
+    let mut result = 0;
     let len = model.grid.width();
     for i in 0..model.grid.height() {
-        compress_row_left(&mut model.grid.row_mut(i), len);
+        result += compress_row_left(&mut model.grid.row_mut(i), len);
     }
+    result
 }
 
-fn compress_right(model: &mut Model) {
+fn compress_right(model: &mut Model) -> u16 {
+    let mut result = 0;
     let len = model.grid.width();
     for i in 0..model.grid.height() {
-        compress_row_right(&mut model.grid.row_mut(i), len);
+        result += compress_row_right(&mut model.grid.row_mut(i), len as isize);
     }
+    result
 }
 
-fn compress_up(model: &mut Model) {
+fn compress_up(model: &mut Model) -> u16 {
+    let mut result = 0;
     let len = model.grid.height();
     for i in 0..model.grid.width() {
-        compress_row_left(&mut model.grid.column_mut(i), len);
+        result += compress_row_left(&mut model.grid.column_mut(i), len);
     }
+    result
 }
 
-fn compress_down(model: &mut Model) {
+fn compress_down(model: &mut Model) -> u16 {
+    let mut result = 0;
     let len = model.grid.height();
     for i in 0..model.grid.width() {
-        compress_row_right(&mut model.grid.column_mut(i), len);
+        result += compress_row_right(&mut model.grid.column_mut(i), len as isize);
     }
+    result
 }
 
-fn next_left<T>(row: &T, mut i: usize, n: usize) -> Option<usize>
+fn next_right<T>(row: &T, mut i: usize, n: usize) -> Option<usize>
 where
     T: Index<usize, Output = u16>,
 {
@@ -80,22 +91,25 @@ where
     None
 }
 
-fn compress_row_left<T>(row: &mut T, n: usize)
+fn compress_row_left<T>(row: &mut T, n: usize) -> T::Output
 where
     T: IndexMut<usize, Output = u16>,
 {
     let mut i = 0;
     let mut j = 1;
+    let mut v = 0;
     while i < n {
-        match next_left(row, j, n) {
+        match next_right(row, j, n) {
             Some(x) => {
                 if row[i] != 0 {
                     if row[i] == row[x] {
                         row[i] += 1;
                         row[x] = 0;
                         j = x + 1;
+                        v += row[i];
                     }
                     i += 1;
+                    j = usize::max(j, i + 1);
                 } else {
                     row[i] = row[x];
                     row[x] = 0;
@@ -107,18 +121,137 @@ where
             }
         }
     }
+    v
 }
 
-fn next_right<T>(_row: &T, mut _i: usize, _n: usize) -> Option<usize>
+fn next_left<T>(row: &T, mut i: isize) -> Option<usize>
 where
     T: Index<usize, Output = u16>,
 {
-    unimplemented!()
+    while i >= 0 {
+        if row[i as usize] != 0 {
+            return Some(i as usize);
+        } else {
+            i -= 1;
+        }
+    }
+    None
 }
 
-fn compress_row_right<T>(_row: &mut T, _n: usize)
+fn compress_row_right<T>(row: &mut T, n: isize) -> T::Output
 where
     T: IndexMut<usize, Output = u16>,
 {
-    unimplemented!()
+    let mut i = n - 1;
+    let mut j = i - 1;
+    let mut v = 0;
+    while i >= 0 {
+        match next_left(row, j) {
+            Some(x) => {
+                if row[i as usize] != 0 {
+                    if row[i as usize] == row[x] {
+                        row[i as usize] += 1;
+                        row[x] = 0;
+                        j = x as isize - 1;
+                        v += row[i as usize];
+                    }
+                    i -= 1;
+                    j = isize::min(j, i - 1);
+                } else {
+                    row[i as usize] = row[x];
+                    row[x] = 0;
+                    j = x as isize - 1;
+                }
+            }
+            None => {
+                break;
+            }
+        }
+    }
+    v
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simple_left() {
+        let mut row = [0,0,0,1];
+        let result = compress_row_left(&mut row, 4);
+        assert_eq!(result, 0);
+        assert_eq!(row, [1,0,0,0]);
+    }
+
+    #[test]
+    fn simple_combine_left() {
+        let mut row = [0,0,1,1];
+        let result = compress_row_left(&mut row, 4);
+        assert_eq!(result, 2);
+        assert_eq!(row, [2,0,0,0])
+    }
+
+    #[test]
+    fn full_combine_left() {
+        let mut row = [1,1,1,1];
+        let result = compress_row_left(&mut row, 4);
+        assert_eq!(result, 4);
+        assert_eq!(row, [2,2,0,0])
+    }
+
+    #[test]
+    fn no_combine_left() {
+        let mut row = [1,2,3,4];
+        let result = compress_row_left(&mut row, 4);
+        assert_eq!(result, 0);
+        assert_eq!(row, [1,2,3,4]);
+    }
+
+    #[test]
+    fn no_combine_complex_left() {
+        let mut row = [1,2,1,3];
+        let result = compress_row_left(&mut row, 4);
+        assert_eq!(result, 0);
+        assert_eq!(row, [1,2,1,3]);
+    }
+
+    #[test]
+    fn simple_right() {
+        let mut row = [1,0,0,0];
+        let result = compress_row_right(&mut row, 4);
+        assert_eq!(result, 0);
+        assert_eq!(row, [0,0,0,1]);
+    }
+
+    #[test]
+    fn simple_combine_right() {
+        let mut row = [1,1,0,0];
+        let result = compress_row_right(&mut row, 4);
+        assert_eq!(result, 2);
+        assert_eq!(row, [0,0,0,2])
+    }
+
+    #[test]
+    fn full_combine_right() {
+        let mut row = [1,1,1,1];
+        let result = compress_row_right(&mut row, 4);
+        assert_eq!(result, 4);
+        assert_eq!(row, [0,0,2,2])
+    }
+
+    #[test]
+    fn no_combine_right() {
+        let mut row = [1,2,3,4];
+        let result = compress_row_right(&mut row, 4);
+        assert_eq!(result, 0);
+        assert_eq!(row, [1,2,3,4]);
+    }
+
+    #[test]
+    fn no_combine_complex_right() {
+        let mut row = [1,2,1,3];
+        let result = compress_row_right(&mut row, 4);
+        assert_eq!(result, 0);
+        assert_eq!(row, [1,2,1,3]);
+    }
 }

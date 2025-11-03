@@ -3,10 +3,15 @@ use rand::prelude::*;
 use crate::grid::Grid;
 use crate::vec2::Vec2;
 
-#[derive(Default)]
+pub enum State {
+    Running,
+    Done
+}
+
 pub struct Model {
     pub grid: Grid<u16>,
     rng: rand::rngs::ThreadRng,
+    pub state: State,
     pub score: u32,
 }
 
@@ -15,6 +20,7 @@ impl Model {
         let mut model = Model {
             grid: Grid::new(4, 4),
             rng: rand::rng(),
+            state: State::Running,
             score: 0,
         };
         for _ in 0..2 {
@@ -34,6 +40,33 @@ impl Model {
             }
         }
         empty_nodes
+    }
+
+    fn adjacent_by_column(&self) -> bool {
+        for c in self.grid.columns() {
+            for i in 1..3 {
+                if c[i] == c[i - 1] {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn adjacent_by_row(&self) -> bool {
+        for r in self.grid.rows() {
+            for i in 1..3 {
+                if r[i] == r[i - 1] {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    // Checks if there are anyu remaining valid moves
+    pub fn check_for_valid_moves(&self) -> bool {
+        !self.empty_nodes().is_empty() || self.adjacent_by_column() || self.adjacent_by_row()
     }
 
     fn pick_new_value(&mut self) -> u16 {

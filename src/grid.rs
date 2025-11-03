@@ -209,7 +209,7 @@ impl<T> Grid<T> {
         self.data.get_unchecked(index)
     }
 
-    pub unsafe fn get_unchecked_mut(&mut self, row: usize, col: usize) -> &T {
+    pub unsafe fn get_unchecked_mut(&mut self, row: usize, col: usize) -> &mut T {
         let index = self.get_index(row, col);
         self.data.get_unchecked_mut(index)
     }
@@ -222,7 +222,7 @@ impl<T> Grid<T> {
         }
     }
 
-    pub fn get_mut(&mut self, row: usize, col: usize) -> Option<&T> {
+    pub fn get_mut(&mut self, row: usize, col: usize) -> Option<&mut T> {
         if row >= self.rows || col >= self.cols {
             None
         } else {

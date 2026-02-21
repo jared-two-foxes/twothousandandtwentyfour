@@ -34,8 +34,11 @@ pub fn update(model: &mut Model, message: Message) -> Option<Message> {
     }
 }
 
-fn highest_tile(_model: &Model) -> u8 {
-    0
+fn highest_tile(model: &Model) -> u16 {
+    model.grid.data.iter()
+        .cloned()
+        .max()
+        .unwrap_or(0)
 }
 
 fn compress_left(model: &mut Model) {

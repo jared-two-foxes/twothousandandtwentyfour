@@ -122,3 +122,82 @@ where
 {
     unimplemented!()
 }
+
+#[cfg(test)]
+mod tests {
+#[test]
+fn test_compress_left() {
+    let mut model = Model::new(4, 4); // Assuming the grid size is 4x4
+    
+    // Example grid:
+    // [2, 2, 4, 0]
+    // [0, 2, 2, 2]
+    // [0, 0, 0, 4]
+    // [0, 0, 0, 0]
+    model.grid.set_row(0, &[2, 2, 4, 0]);
+    model.grid.set_row(1, &[0, 2, 2, 2]);
+    model.grid.set_row(2, &[0, 0, 0, 4]);
+    model.grid.set_row(3, &[0, 0, 0, 0]);
+
+    compress_left(&mut model);
+
+    // Expected output:
+    // [4, 4, 0, 0]
+    // [4, 2, 0, 0]
+    // [4, 0, 0, 0]
+    // [0, 0, 0, 0]
+    assert_eq!(model.grid.get_row(0), &[4, 4, 0, 0]);
+    assert_eq!(model.grid.get_row(1), &[4, 2, 0, 0]);
+    assert_eq!(model.grid.get_row(2), &[4, 0, 0, 0]);
+    assert_eq!(model.grid.get_row(3), &[0, 0, 0, 0]);
+}
+
+#[test]
+fn test_compress_left_empty_rows() {
+    let mut model = Model::new(4, 4); // Grid size 4x4
+    
+    // Empty grid:
+    // [0, 0, 0, 0]
+    // [0, 0, 0, 0]
+    // [0, 0, 0, 0]
+    // [0, 0, 0, 0]
+    for i in 0..4 {
+        model.grid.set_row(i, &[0, 0, 0, 0]);
+    }
+
+    compress_left(&mut model);
+
+    // Expected output: Should remain the same as the input
+    for i in 0..4 {
+        assert_eq!(model.grid.get_row(i), &[0, 0, 0, 0]);
+    }
+}
+
+#[test]
+fn test_compress_up() {
+    let mut model = Model::new(4, 4);
+    
+    // Example grid:
+    // [2, 0, 0, 0]
+    // [2, 2, 4, 4]
+    // [4, 4, 0, 0]
+    // [0, 4, 0, 4]
+    model.grid.set_row(0, &[2, 0, 0, 0]);
+    model.grid.set_row(1, &[2, 2, 4, 4]);
+    model.grid.set_row(2, &[4, 4, 0, 0]);
+    model.grid.set_row(3, &[0, 4, 0, 4]);
+
+    compress_up(&mut model);
+
+    // Expected output:
+    // [4, 2, 4, 8]
+    // [4, 8, 0, 0]
+    // [0, 0, 0, 0]
+    // [0, 0, 0, 0]
+    assert_eq!(model.grid.get_row(0), &[4, 2, 4, 8]);
+    assert_eq!(model.grid.get_row(1), &[4, 8, 0, 0]);
+    assert_eq!(model.grid.get_row(2), &[0, 0, 0, 0]);
+    assert_eq!(model.grid.get_row(3), &[0, 0, 0, 0]);
+}
+
+}

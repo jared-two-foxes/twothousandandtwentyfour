@@ -425,4 +425,417 @@ mod tests {
         let mut grid: Grid<i32> = Grid::new(2, 2);
         grid.swap((0, 0), (0, 5)); // col out of bounds
     }
+
+    // ========== Grid creation and basic properties ==========
+
+    #[test]
+    fn test_grid_new() {
+        let grid: Grid<i32> = Grid::new(3, 4);
+        assert_eq!(grid.width(), 3);
+        assert_eq!(grid.height(), 4);
+    }
+
+    #[test]
+    fn test_grid_new_single_row() {
+        let grid: Grid<u32> = Grid::new(1, 5);
+        assert_eq!(grid.width(), 1);
+        assert_eq!(grid.height(), 5);
+    }
+
+    #[test]
+    fn test_grid_new_single_column() {
+        let grid: Grid<u8> = Grid::new(8, 1);
+        assert_eq!(grid.width(), 8);
+        assert_eq!(grid.height(), 1);
+    }
+
+    #[test]
+    fn test_grid_new_initializes_to_default() {
+        let grid: Grid<i32> = Grid::new(2, 3);
+        for i in 0..2 {
+            for j in 0..3 {
+                assert_eq!(*grid.value(i, j), 0, "Cell ({}, {}) should initialize to default", i, j);
+            }
+        }
+    }
+
+    #[test]
+    fn test_grid_width_and_height() {
+        let grid: Grid<String> = Grid::new(7, 11);
+        assert_eq!(grid.width(), 7);
+        assert_eq!(grid.height(), 11);
+    }
+
+    // ========== Value access via value() and value_mut() ==========
+
+    #[test]
+    fn test_value_read() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        *grid.value_mut(0, 0) = 42;
+        *grid.value_mut(1, 1) = 99;
+
+        assert_eq!(*grid.value(0, 0), 42);
+        assert_eq!(*grid.value(1, 1), 99);
+    }
+
+    #[test]
+    fn test_value_mut_write() {
+        let mut grid: Grid<&str> = Grid::new(2, 2);
+        *grid.value_mut(0, 1) = "hello";
+        *grid.value_mut(1, 0) = "world";
+
+        assert_eq!(*grid.value(0, 1), "hello");
+        assert_eq!(*grid.value(1, 0), "world");
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_value_panics_row_out_of_bounds() {
+        let grid: Grid<i32> = Grid::new(2, 2);
+        let _ = grid.value(5, 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_value_panics_col_out_of_bounds() {
+        let grid: Grid<i32> = Grid::new(2, 2);
+        let _ = grid.value(0, 5);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_value_mut_panics_row_out_of_bounds() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        let _ = grid.value_mut(5, 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_value_mut_panics_col_out_of_bounds() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        let _ = grid.value_mut(0, 5);
+    }
+
+    // ========== Option-based access via get() and get_mut() ==========
+
+    #[test]
+    fn test_get_valid() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        *grid.value_mut(0, 0) = 55;
+
+        let val = grid.get(0, 0);
+        assert!(val.is_some());
+        assert_eq!(*val.unwrap(), 55);
+    }
+
+    #[test]
+    fn test_get_mut_valid() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+
+        if let Some(cell) = grid.get_mut(1, 1) {
+            *cell = 77;
+        }
+
+        assert_eq!(*grid.value(1, 1), 77);
+    }
+
+    #[test]
+    fn test_get_returns_none_row_out_of_bounds() {
+        let grid: Grid<i32> = Grid::new(2, 2);
+        assert!(grid.get(5, 0).is_none());
+    }
+
+    #[test]
+    fn test_get_returns_none_col_out_of_bounds() {
+        let grid: Grid<i32> = Grid::new(2, 2);
+        assert!(grid.get(0, 5).is_none());
+    }
+
+    #[test]
+    fn test_get_mut_returns_none_row_out_of_bounds() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        assert!(grid.get_mut(5, 0).is_none());
+    }
+
+    #[test]
+    fn test_get_mut_returns_none_col_out_of_bounds() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        assert!(grid.get_mut(0, 5).is_none());
+    }
+
+    // ========== Tuple index access via Index/IndexMut traits ==========
+
+    #[test]
+    fn test_index_trait() {
+        let mut grid: Grid<i32> = Grid::new(2, 3);
+        *grid.value_mut(0, 2) = 123;
+
+        assert_eq!(grid[(0, 2)], 123);
+    }
+
+    #[test]
+    fn test_index_mut_trait() {
+        let mut grid: Grid<i32> = Grid::new(2, 3);
+        grid[(1, 1)] = 456;
+
+        assert_eq!(*grid.value(1, 1), 456);
+    }
+
+    #[test]
+    #[should_panic(expected = "")]
+    fn test_index_trait_panics_out_of_bounds() {
+        let grid: Grid<i32> = Grid::new(2, 2);
+        let _ = grid[(5, 5)];
+    }
+
+    #[test]
+    #[should_panic(expected = "")]
+    fn test_index_mut_trait_panics_out_of_bounds() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        grid[(5, 5)] = 1;
+    }
+
+    // ========== Row access and iteration ==========
+
+    #[test]
+    fn test_row_basic_access() {
+        let mut grid: Grid<i32> = Grid::new(3, 3);
+        *grid.value_mut(1, 0) = 10;
+        *grid.value_mut(1, 1) = 20;
+        *grid.value_mut(1, 2) = 30;
+
+        let row = grid.row(1);
+        assert_eq!(row[0], 10);
+        assert_eq!(row[1], 20);
+        assert_eq!(row[2], 30);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_row_panics_out_of_bounds() {
+        let grid: Grid<i32> = Grid::new(2, 3);
+        let _ = grid.row(5);
+    }
+
+    #[test]
+    fn test_row_mut_modification() {
+        let mut grid: Grid<i32> = Grid::new(2, 3);
+        {
+            let mut row = grid.row_mut(0);
+            row[0] = 100;
+            row[1] = 200;
+        }
+
+        assert_eq!(*grid.value(0, 0), 100);
+        assert_eq!(*grid.value(0, 1), 200);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_row_mut_panics_out_of_bounds() {
+        let mut grid: Grid<i32> = Grid::new(2, 3);
+        let _ = grid.row_mut(5);
+    }
+
+    #[test]
+    fn test_rows_returns_all_rows() {
+        let mut grid: Grid<i32> = Grid::new(3, 2);
+        for i in 0..3 {
+            for j in 0..2 {
+                *grid.value_mut(i, j) = (i * 10 + j) as i32;
+            }
+        }
+
+        let rows = grid.rows();
+        assert_eq!(rows.len(), 3);
+
+        for i in 0..3 {
+            for j in 0..2 {
+                assert_eq!(rows[i][j], (i * 10 + j) as i32);
+            }
+        }
+    }
+
+    #[test]
+    fn test_rows_empty_grid() {
+        let grid: Grid<i32> = Grid::new(0, 5);
+        let rows = grid.rows();
+        assert_eq!(rows.len(), 0);
+    }
+
+    // ========== Column access and iteration ==========
+
+    #[test]
+    fn test_column_basic_access() {
+        let mut grid: Grid<i32> = Grid::new(3, 2);
+        *grid.value_mut(0, 1) = 11;
+        *grid.value_mut(1, 1) = 22;
+        *grid.value_mut(2, 1) = 33;
+
+        let col = grid.column(1);
+        assert_eq!(col[0], 11);
+        assert_eq!(col[1], 22);
+        assert_eq!(col[2], 33);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_column_panics_out_of_bounds() {
+        let grid: Grid<i32> = Grid::new(2, 2);
+        let _ = grid.column(5);
+    }
+
+    #[test]
+    fn test_column_mut_modification() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        {
+            let mut col = grid.column_mut(1);
+            col[0] = 500;
+            col[1] = 600;
+        }
+
+        assert_eq!(*grid.value(0, 1), 500);
+        assert_eq!(*grid.value(1, 1), 600);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_column_mut_panics_out_of_bounds() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        let _ = grid.column_mut(5);
+    }
+
+    #[test]
+    fn test_columns_returns_all_columns() {
+        let mut grid: Grid<i32> = Grid::new(2, 3);
+        for i in 0..2 {
+            for j in 0..3 {
+                *grid.value_mut(i, j) = (i * 10 + j) as i32;
+            }
+        }
+
+        let columns = grid.columns();
+        assert_eq!(columns.len(), 3);
+
+        for i in 0..2 {
+            for j in 0..3 {
+                assert_eq!(columns[j][i], (i * 10 + j) as i32);
+            }
+        }
+    }
+
+    #[test]
+    fn test_columns_empty_grid() {
+        let grid: Grid<i32> = Grid::new(2, 0);
+        let columns = grid.columns();
+        assert_eq!(columns.len(), 0);
+    }
+
+    // ========== Unsafe get_unchecked methods ==========
+
+    #[test]
+    fn test_get_unchecked() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        *grid.value_mut(0, 0) = 777;
+
+        unsafe {
+            assert_eq!(*grid.get_unchecked(0, 0), 777);
+        }
+    }
+
+    #[test]
+    fn test_get_unchecked_mut() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+
+        unsafe {
+            *grid.get_unchecked_mut(1, 1) = 888;
+        }
+
+        assert_eq!(*grid.value(1, 1), 888);
+    }
+
+    // ========== Complex scenarios and edge cases ==========
+
+    #[test]
+    fn test_large_grid() {
+        let mut grid: Grid<usize> = Grid::new(100, 100);
+
+        for i in 0..100 {
+            for j in 0..100 {
+                *grid.value_mut(i, j) = i * 100 + j;
+            }
+        }
+
+        // Spot check
+        assert_eq!(*grid.value(50, 50), 50 * 100 + 50);
+        assert_eq!(*grid.value(99, 99), 99 * 100 + 99);
+    }
+
+    #[test]
+    fn test_alternating_access_and_mutation() {
+        let mut grid: Grid<i32> = Grid::new(3, 3);
+
+        // Set via value_mut
+        *grid.value_mut(0, 0) = 1;
+
+        // Read via value
+        assert_eq!(*grid.value(0, 0), 1);
+
+        // Read via get
+        assert_eq!(*grid.get(0, 0).unwrap(), 1);
+
+        // Mutate via get_mut
+        *grid.get_mut(0, 0).unwrap() = 2;
+
+        // Read via index
+        assert_eq!(grid[(0, 0)], 2);
+
+        // Mutate via index_mut
+        grid[(0, 0)] = 3;
+
+        // Final check
+        assert_eq!(*grid.value(0, 0), 3);
+    }
+
+    #[test]
+    fn test_grid_with_different_types() {
+        let mut grid_str: Grid<&str> = Grid::new(2, 2);
+        *grid_str.value_mut(0, 0) = "test";
+        assert_eq!(*grid_str.value(0, 0), "test");
+
+        let mut grid_f64: Grid<f64> = Grid::new(2, 2);
+        *grid_f64.value_mut(1, 1) = 3.14;
+        assert_eq!(*grid_f64.value(1, 1), 3.14);
+
+        let mut grid_bool: Grid<bool> = Grid::new(2, 2);
+        *grid_bool.value_mut(0, 1) = true;
+        assert_eq!(*grid_bool.value(0, 1), true);
+    }
+
+    #[test]
+    fn test_grid_multiple_swaps() {
+        let mut grid: Grid<i32> = Grid::new(2, 3);
+        for i in 0..2 {
+            for j in 0..3 {
+                *grid.value_mut(i, j) = (i * 10 + j) as i32;
+            }
+        }
+
+        // Swap (0,0) with (0,1)
+        grid.swap((0, 0), (0, 1));
+        assert_eq!(*grid.value(0, 0), 1);
+        assert_eq!(*grid.value(0, 1), 0);
+
+        // Swap (0,1) with (1,1)
+        grid.swap((0, 1), (1, 1));
+        assert_eq!(*grid.value(0, 1), 11);
+        assert_eq!(*grid.value(1, 1), 0);
+    }
+
+    #[test]
+    fn test_default_trait() {
+        let grid: Grid<i32> = Default::default();
+        // Should compile and create a valid grid
+        let _ = grid.width();
+    }
 }

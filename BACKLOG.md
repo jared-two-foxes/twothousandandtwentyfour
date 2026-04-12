@@ -19,14 +19,14 @@
 - **Issue**: `unimplemented!()` blocks column-based adjacent-equal checks
 - **Fix**: Return `Vec<Column<'a, T>>` analogous to `rows()`
 - **Impact**: Runtime panic in [src/model.rs](src/model.rs#L45) via `adjacent_by_column()`
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 1.2 Add bounds assertion in Grid::swap()
 - **File**: [src/grid.rs](src/grid.rs#L234)
 - **Issue**: TODO comment notes missing validation
 - **Fix**: Add asserts for valid row/col indices before swap
 - **Impact**: Better error messages on out-of-bounds access
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ---
 

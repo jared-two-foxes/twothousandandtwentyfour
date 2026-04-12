@@ -194,8 +194,8 @@ impl<T> Grid<T> {
         }
     }
 
-    pub fn columns<'a>(&self) -> Vec<Column<'a, T>> {
-        unimplemented!()
+    pub fn columns<'a>(&'a self) -> Vec<Column<'a, T>> {
+        (0..self.cols).map(|i| Column { grid: self, column: i}).collect()
     }
 
     #[inline]
@@ -231,7 +231,8 @@ impl<T> Grid<T> {
     }
 
     pub fn swap(&mut self, (row_a, col_a): (usize, usize), (row_b, col_b): (usize, usize)) {
-        //@todo: validate indices with an assert
+        assert!(row_a < self.rows && col_a < self.cols, "First index out of bounds");
+        assert!(row_b < self.rows && col_b < self.cols, "Second index out of bounds");
         let l = self.get_index(row_a, col_a);
         let r = self.get_index(row_b, col_b);
         self.data.swap(l, r);
@@ -268,5 +269,160 @@ impl<T> IndexMut<(usize, usize)> for Grid<T> {
         assert!(row < self.rows && col < self.cols, "");
         let index = self.get_index(row, col);
         &mut self.data[index]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_columns_iteration() {
+        let grid: Grid<u32> = {
+            let mut g = Grid::new(2, 3);
+            // Initialize grid with pattern: row-major order
+            // [0, 1, 2]
+            // [3, 4, 5]
+            for i in 0..2 {
+                for j in 0..3 {
+                    *g.value_mut(i, j) = (i * 3 + j) as u32;
+                }
+            }
+            g
+        };
+
+        let columns = grid.columns();
+        assert_eq!(columns.len(), 3, "Should have 3 columns");
+
+        // Column 0: [0, 3]
+        assert_eq!(columns[0][0], 0);
+        assert_eq!(columns[0][1], 3);
+
+        // Column 1: [1, 4]
+        assert_eq!(columns[1][0], 1);
+        assert_eq!(columns[1][1], 4);
+
+        // Column 2: [2, 5]
+        assert_eq!(columns[2][0], 2);
+        assert_eq!(columns[2][1], 5);
+    }
+
+    #[test]
+    fn test_columns_single_column() {
+        let grid: Grid<i32> = {
+            let mut g = Grid::new(4, 1);
+            for i in 0..4 {
+                *g.value_mut(i, 0) = (i * 10) as i32;
+            }
+            g
+        };
+
+        let columns = grid.columns();
+        assert_eq!(columns.len(), 1);
+        assert_eq!(columns[0][0], 0);
+        assert_eq!(columns[0][1], 10);
+        assert_eq!(columns[0][2], 20);
+        assert_eq!(columns[0][3], 30);
+    }
+
+    #[test]
+    fn test_columns_single_row() {
+        let grid: Grid<u16> = {
+            let mut g = Grid::new(1, 4);
+            for j in 0..4 {
+                *g.value_mut(0, j) = (j as u16) * 5;
+            }
+            g
+        };
+
+        let columns = grid.columns();
+        assert_eq!(columns.len(), 4);
+        assert_eq!(columns[0][0], 0);
+        assert_eq!(columns[1][0], 5);
+        assert_eq!(columns[2][0], 10);
+        assert_eq!(columns[3][0], 15);
+    }
+
+    #[test]
+    fn test_rows_and_columns_consistency() {
+        let grid: Grid<u32> = {
+            let mut g = Grid::new(3, 4);
+            // Fill with unique values
+            for i in 0..3 {
+                for j in 0..4 {
+                    *g.value_mut(i, j) = (i * 10 + j) as u32;
+                }
+            }
+            g
+        };
+
+        let rows = grid.rows();
+        let columns = grid.columns();
+
+        // Verify that grid[i][j] == rows[i][j] == columns[j][i]
+        for i in 0..3 {
+            for j in 0..4 {
+                let val = *grid.value(i, j);
+                assert_eq!(rows[i][j], val, "Row access mismatch at ({}, {})", i, j);
+                assert_eq!(columns[j][i], val, "Column access mismatch at ({}, {})", i, j);
+            }
+        }
+    }
+
+    #[test]
+    fn test_swap_basic() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        *grid.value_mut(0, 0) = 10;
+        *grid.value_mut(0, 1) = 20;
+        *grid.value_mut(1, 0) = 30;
+        *grid.value_mut(1, 1) = 40;
+
+        grid.swap((0, 0), (1, 1));
+
+        assert_eq!(*grid.value(0, 0), 40);
+        assert_eq!(*grid.value(1, 1), 10);
+        // Other values unchanged
+        assert_eq!(*grid.value(0, 1), 20);
+        assert_eq!(*grid.value(1, 0), 30);
+    }
+
+    #[test]
+    fn test_swap_same_position() {
+        let mut grid: Grid<u8> = Grid::new(2, 2);
+        *grid.value_mut(0, 0) = 42;
+        *grid.value_mut(0, 1) = 99;
+
+        grid.swap((0, 0), (0, 0));
+
+        // Value should remain the same
+        assert_eq!(*grid.value(0, 0), 42);
+    }
+
+    #[test]
+    #[should_panic(expected = "First index out of bounds")]
+    fn test_swap_validates_first_index_row() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        grid.swap((5, 0), (0, 0)); // row out of bounds
+    }
+
+    #[test]
+    #[should_panic(expected = "First index out of bounds")]
+    fn test_swap_validates_first_index_col() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        grid.swap((0, 5), (0, 0)); // col out of bounds
+    }
+
+    #[test]
+    #[should_panic(expected = "Second index out of bounds")]
+    fn test_swap_validates_second_index_row() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        grid.swap((0, 0), (5, 0)); // row out of bounds
+    }
+
+    #[test]
+    #[should_panic(expected = "Second index out of bounds")]
+    fn test_swap_validates_second_index_col() {
+        let mut grid: Grid<i32> = Grid::new(2, 2);
+        grid.swap((0, 0), (0, 5)); // col out of bounds
     }
 }

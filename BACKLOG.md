@@ -185,37 +185,37 @@
   - Update test setup to use current Model/Grid APIs
   - Verify expected outputs use exponent representation (e.g., 2 = exponent 1, 4 = exponent 2)
   - Run and pass all existing test cases
-- **Status**: Not started
+- **Status**: ✅ Completed (tests were already correct and passing)
 
 ### 8.2 Add no-op move test
 - **Behavior**: Move in same direction twice; second move should spawn nothing
 - **Test**: Board state + score remain same after no-op
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 8.3 Add merge-once-per-move test
 - **Behavior**: A row of [1, 1, 1, 0] compressed left should yield [2, 1, 0, 0], not [2, 0, 0, 0]
 - **Test**: Verify only one merge occurs per value per move
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 8.4 Add win detection test
 - **Behavior**: Reaching exponent 11 (2048) sets state to Won
 - **Test**: Generate board with exponent 11, perform move, verify state = Won
-- **Status**: Not started
+- **Status**: ✅ Completed (covered by existing tests)
 
 ### 8.5 Add loss detection test
 - **Behavior**: Board full, no adjacent equals, no moves available
 - **Test**: Construct full board with no merges, verify state = Lost after attempting move
-- **Status**: Not started
+- **Status**: ✅ Completed (covered by existing tests)
 
 ### 8.6 Add score correctness test
 - **Behavior**: Merging two exponent-2 tiles (4) yields exponent-3 (8) and score += 8
 - **Test**: Verify score += 2^exponent, not raw exponent
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 8.7 Add state transition test
 - **Behavior**: Game starts in Running; moves transition to Won or Lost
 - **Test**: Verify state machine: Running → Won → WonContinue (or Lost → end)
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ---
 

@@ -96,3 +96,110 @@ fn no_valid_moves_sets_lost_state() {
     assert!(matches!(model.state, State::Lost));
     assert_eq!(model.score, 0);
 }
+
+// 8.2: second move in the same direction is a no-op — board and score unchanged
+#[test]
+fn second_move_same_direction_is_no_op() {
+    // Tiles are already left-aligned; both presses of Left are guaranteed no-ops
+    // so no tile should ever be spawned.
+    let mut model = Model::new();
+    clear_grid(&mut model);
+    set_grid(
+        &mut model,
+        [
+            [1, 0, 0, 0],
+            [2, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ],
+    );
+
+    let snapshot_before: Vec<u16> = (0..4)
+        .flat_map(|i| (0..4).map(move |j| (i, j)))
+        .map(|(i, j)| *model.grid.value(i, j))
+        .collect();
+
+    let _ = actions::update(&mut model, Message::Compress(Direction::Left));
+    let _ = actions::update(&mut model, Message::Compress(Direction::Left));
+
+    let snapshot_after: Vec<u16> = (0..4)
+        .flat_map(|i| (0..4).map(move |j| (i, j)))
+        .map(|(i, j)| *model.grid.value(i, j))
+        .collect();
+
+    assert_eq!(snapshot_before, snapshot_after);
+    assert_eq!(model.score, 0);
+}
+
+// 8.6: score uses display value (2^exponent), not the raw exponent
+#[test]
+fn merge_score_is_display_value_not_exponent() {
+    // Two exponent-2 tiles (display value 4 each) merge into exponent-3 (display value 8).
+    // Score should increase by 8, not by 3.
+    let mut model = Model::new();
+    clear_grid(&mut model);
+    set_grid(
+        &mut model,
+        [
+            [2, 2, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ],
+    );
+
+    let _ = actions::update(&mut model, Message::Compress(Direction::Left));
+
+    assert_eq!(*model.grid.value(0, 0), 3); // 2^3 = 8
+    assert_eq!(model.score, 8);
+}
+
+// 8.7: full state machine — Running → Won → WonContinue
+#[test]
+fn state_transitions_running_won_won_continue() {
+    let mut model = Model::new();
+    clear_grid(&mut model);
+    set_grid(
+        &mut model,
+        [
+            [10, 10, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ],
+    );
+
+    assert!(matches!(model.state, State::Running));
+
+    let _ = actions::update(&mut model, Message::Compress(Direction::Left));
+    assert!(matches!(model.state, State::Won));
+
+    // Simulate the player choosing to continue.
+    model.state = State::WonContinue;
+    assert!(matches!(model.state, State::WonContinue));
+
+    // Further moves do not revert back to Won (guard in update).
+    let _ = actions::update(&mut model, Message::Compress(Direction::Left));
+    assert!(!matches!(model.state, State::Won));
+}
+
+// 8.7 (cont.): Running → Lost
+#[test]
+fn state_transitions_running_to_lost() {
+    let mut model = Model::new();
+    clear_grid(&mut model);
+    set_grid(
+        &mut model,
+        [
+            [1, 2, 3, 4],
+            [2, 3, 4, 1],
+            [3, 4, 1, 2],
+            [4, 1, 2, 3],
+        ],
+    );
+
+    assert!(matches!(model.state, State::Running));
+
+    let _ = actions::update(&mut model, Message::Compress(Direction::Left));
+    assert!(matches!(model.state, State::Lost));
+}

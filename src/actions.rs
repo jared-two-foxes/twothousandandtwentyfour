@@ -236,6 +236,16 @@ mod tests {
     }
 
     #[test]
+    fn compress_row_left_three_tiles_merges_first_pair_only() {
+        // [1, 1, 1, 0] → first two merge to exponent 2, third tile stays as exponent 1
+        let mut row = vec![1u16, 1u16, 1u16, 0u16];
+        let merged = compress_row_left(&mut row, 4);
+
+        assert_eq!(row, vec![2u16, 1u16, 0u16, 0u16]);
+        assert_eq!(merged, 4u32);
+    }
+
+    #[test]
     fn compress_row_left_scores_multiple_merges_by_display_value() {
         let mut row = vec![1u16, 1u16, 1u16, 1u16];
         let merged = compress_row_left(&mut row, 4);

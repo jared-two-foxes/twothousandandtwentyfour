@@ -50,7 +50,7 @@
 - **Issue**: Score accumulation likely uses raw exponent, not 2^n
 - **Fix**: When merging at exponent k, add `2^k` to score, not k
 - **Impact**: Score is correct and matches player expectations
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ---
 

@@ -23,7 +23,7 @@ pub fn update(model: &mut Model, message: Message) -> Option<Message> {
                 Direction::Down => compress_down(model),
             };
 
-            model.score += value as u32;
+            model.score += value;
 
             // Fill a new square
             model.generate_new_value();
@@ -49,7 +49,7 @@ fn highest_tile(model: &Model) -> u16 {
     max_val
 }
 
-fn compress_left(model: &mut Model) -> u16 {
+fn compress_left(model: &mut Model) -> u32 {
     let mut result = 0;
     let len = model.grid.width();
     for i in 0..model.grid.height() {
@@ -58,7 +58,7 @@ fn compress_left(model: &mut Model) -> u16 {
     result
 }
 
-fn compress_right(model: &mut Model) -> u16 {
+fn compress_right(model: &mut Model) -> u32 {
     let mut result = 0;
     let len = model.grid.width();
     for i in 0..model.grid.height() {
@@ -67,7 +67,7 @@ fn compress_right(model: &mut Model) -> u16 {
     result
 }
 
-fn compress_up(model: &mut Model) -> u16 {
+fn compress_up(model: &mut Model) -> u32 {
     let mut result = 0;
     let len = model.grid.height();
     for i in 0..model.grid.width() {
@@ -76,7 +76,7 @@ fn compress_up(model: &mut Model) -> u16 {
     result
 }
 
-fn compress_down(model: &mut Model) -> u16 {
+fn compress_down(model: &mut Model) -> u32 {
     let mut result = 0;
     let len = model.grid.height();
     for i in 0..model.grid.width() {
@@ -99,13 +99,13 @@ where
     None
 }
 
-fn compress_row_left<T>(row: &mut T, n: usize) -> T::Output
+fn compress_row_left<T>(row: &mut T, n: usize) -> u32
 where
     T: IndexMut<usize, Output = u16>,
 {
     let mut i = 0;
     let mut j = 1;
-    let mut v = 0;
+    let mut v: u32 = 0;
     while i < n {
         match next_right(row, j, n) {
             Some(x) => {
@@ -114,7 +114,7 @@ where
                         row[i] += 1;
                         row[x] = 0;
                         j = x + 1;
-                        v += row[i];
+                        v += 2u32.pow(u32::from(row[i]));
                     }
                     i += 1;
                     j = usize::max(j, i + 1);
@@ -146,13 +146,13 @@ where
     None
 }
 
-fn compress_row_right<T>(row: &mut T, n: isize) -> T::Output
+fn compress_row_right<T>(row: &mut T, n: isize) -> u32
 where
     T: IndexMut<usize, Output = u16>,
 {
     let mut i = n - 1;
     let mut j = i - 1;
-    let mut v = 0;
+    let mut v: u32 = 0;
     while i >= 0 {
         match next_left(row, j) {
             Some(x) => {
@@ -161,7 +161,7 @@ where
                         row[i as usize] += 1;
                         row[x] = 0;
                         j = x as isize - 1;
-                        v += row[i as usize];
+                        v += 2u32.pow(u32::from(row[i as usize]));
                     }
                     i -= 1;
                     j = isize::min(j, i - 1);
@@ -197,7 +197,7 @@ mod tests {
         let merged = compress_row_left(&mut row, 4);
 
         assert_eq!(row, vec![2u16, 0u16, 0u16, 0u16]);
-        assert_eq!(merged, 2u16);
+        assert_eq!(merged, 4u32);
     }
 
     #[test]
@@ -206,7 +206,16 @@ mod tests {
         let merged = compress_row_left(&mut row, 4);
 
         assert_eq!(row, vec![3u16, 2u16, 0u16, 0u16]);
-        assert_eq!(merged, 3u16);
+        assert_eq!(merged, 8u32);
+    }
+
+    #[test]
+    fn compress_row_left_scores_multiple_merges_by_display_value() {
+        let mut row = vec![1u16, 1u16, 1u16, 1u16];
+        let merged = compress_row_left(&mut row, 4);
+
+        assert_eq!(row, vec![2u16, 2u16, 0u16, 0u16]);
+        assert_eq!(merged, 8u32);
     }
 
     #[test]

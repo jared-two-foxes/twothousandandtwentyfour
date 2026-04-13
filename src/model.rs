@@ -3,9 +3,12 @@ use rand::prelude::*;
 use crate::grid::Grid;
 use crate::vec2::Vec2;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum State {
     Running,
-    Done
+    Won,
+    WonContinue,
+    Lost,
 }
 
 pub struct Model {

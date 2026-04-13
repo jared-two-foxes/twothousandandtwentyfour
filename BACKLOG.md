@@ -76,7 +76,7 @@
   - `WonContinue`: Player chose to keep playing after winning
   - `Lost`: No moves; game over
 - **Impact**: Enables win-screen UX and continue-game flow
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 3.3 Wire state into CLI loop
 - **File**: [src/bin/cli/main.rs](src/bin/cli/main.rs)

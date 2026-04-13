@@ -28,8 +28,12 @@ pub fn update(model: &mut Model, message: Message) -> Option<Message> {
             // Fill a new square
             model.generate_new_value();
 
-            if highest_tile(model) == 11 || !model.check_for_valid_moves() {
-                model.state = State::Done;
+            if highest_tile(model) == 11 {
+                if !matches!(model.state, State::WonContinue) {
+                    model.state = State::Won;
+                }
+            } else if !model.check_for_valid_moves() {
+                model.state = State::Lost;
             }
 
             None
@@ -271,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn update_sets_done_when_2048_reached() {
+    fn update_sets_won_when_2048_reached() {
         let mut model = Model::new();
         clear_grid(&mut model);
         set_grid(
@@ -286,11 +290,11 @@ mod tests {
 
         let _ = update(&mut model, Message::Compress(Direction::Left));
 
-        assert!(matches!(model.state, State::Done));
+        assert!(matches!(model.state, State::Won));
     }
 
     #[test]
-    fn update_sets_done_when_no_valid_moves_remain() {
+    fn update_sets_lost_when_no_valid_moves_remain() {
         let mut model = Model::new();
         clear_grid(&mut model);
         set_grid(
@@ -305,6 +309,6 @@ mod tests {
 
         let _ = update(&mut model, Message::Compress(Direction::Left));
 
-        assert!(matches!(model.state, State::Done));
+        assert!(matches!(model.state, State::Lost));
     }
 }

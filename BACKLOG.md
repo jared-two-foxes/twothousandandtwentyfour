@@ -82,7 +82,7 @@
 - **File**: [src/bin/cli/main.rs](src/bin/cli/main.rs)
 - **Issue**: Model state transitions are not reflected in the app loop
 - **Fix**: Check `app.model.state` in main loop; stop input processing if Won/Lost (unless WonContinue)
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ---
 

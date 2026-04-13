@@ -133,4 +133,52 @@ fn has_valid_move(&self) -> bool {
 
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn non_zero_tiles(model: &Model) -> Vec<u16> {
+        let mut values = Vec::new();
+        for i in 0..model.grid.height() {
+            for j in 0..model.grid.width() {
+                let value = *model.grid.value(i, j);
+                if value != 0 {
+                    values.push(value);
+                }
+            }
+        }
+        values
+    }
+
+    #[test]
+    fn new_spawns_two_tiles_with_exponent_values() {
+        let model = Model::new();
+        let values = non_zero_tiles(&model);
+
+        assert_eq!(values.len(), 2);
+        assert!(values.iter().all(|v| *v == 1 || *v == 2));
+    }
+
+    #[test]
+    fn generate_new_value_uses_exponents_and_stops_when_full() {
+        let mut model = Model::new();
+
+        for i in 0..model.grid.height() {
+            for j in 0..model.grid.width() {
+                *model.grid.value_mut(i, j) = 0;
+            }
+        }
+
+        for _ in 0..16 {
+            assert!(model.generate_new_value());
+        }
+
+        let values = non_zero_tiles(&model);
+        assert_eq!(values.len(), 16);
+        assert!(values.iter().all(|v| *v == 1 || *v == 2));
+
+        assert!(!model.generate_new_value());
+    }
+}
+
 

@@ -37,7 +37,7 @@
 ### 2.1 Confirm tile storage as exponents throughout
 - **Files**: [src/actions.rs](src/actions.rs#L106), [src/model.rs](src/model.rs#L73)
 - **Behavior**: Tiles are stored as exponents (1 = 2^1, 2 = 2^2, etc.; 0 = empty)
-- **Status**: Documented, verify consistent
+- **Status**: ✅ Completed (validated by unit tests in [src/actions.rs](src/actions.rs) and [src/model.rs](src/model.rs))
 
 ### 2.2 Render exponents as visible powers in TUI
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L33)

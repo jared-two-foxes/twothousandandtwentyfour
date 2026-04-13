@@ -179,9 +179,58 @@ where
     v
 }
 
-// TODO: Tests are currently disabled due to missing Grid::set_row/get_row methods.
-// These will be rebuilt in backlog item 9 (Rebuild Test Coverage).
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn clear_grid(model: &mut Model) {
+        for i in 0..model.grid.height() {
+            for j in 0..model.grid.width() {
+                *model.grid.value_mut(i, j) = 0;
+            }
+        }
+    }
+
+    #[test]
+    fn compress_row_left_merges_exponents() {
+        let mut row = vec![1u16, 1u16, 0u16, 0u16];
+        let merged = compress_row_left(&mut row, 4);
+
+        assert_eq!(row, vec![2u16, 0u16, 0u16, 0u16]);
+        assert_eq!(merged, 2u16);
+    }
+
+    #[test]
+    fn compress_row_left_merges_once_per_pair() {
+        let mut row = vec![2u16, 2u16, 2u16, 0u16];
+        let merged = compress_row_left(&mut row, 4);
+
+        assert_eq!(row, vec![3u16, 2u16, 0u16, 0u16]);
+        assert_eq!(merged, 3u16);
+    }
+
+    #[test]
+    fn compress_left_keeps_grid_in_exponent_domain() {
+        let mut model = Model::new();
+        clear_grid(&mut model);
+
+        *model.grid.value_mut(0, 0) = 1;
+        *model.grid.value_mut(0, 1) = 1;
+        *model.grid.value_mut(1, 0) = 2;
+        *model.grid.value_mut(1, 1) = 2;
+
+        let _ = compress_left(&mut model);
+
+        assert_eq!(*model.grid.value(0, 0), 2);
+        assert_eq!(*model.grid.value(0, 1), 0);
+        assert_eq!(*model.grid.value(1, 0), 3);
+        assert_eq!(*model.grid.value(1, 1), 0);
+
+        for i in 0..model.grid.height() {
+            for j in 0..model.grid.width() {
+                let value = *model.grid.value(i, j);
+                assert!(value <= 11);
+            }
+        }
+    }
+}

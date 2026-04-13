@@ -154,7 +154,7 @@
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L23)
 - **Add**: Color-code tiles by exponent (e.g., red for 2048, yellow for 1024, green for lower)
 - **Use**: Ratatui's Style/Color for per-exponent coloring
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 6.4 Add help footer
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L6)

@@ -57,12 +57,30 @@ fn draw_row(frame: &mut Frame, area: Rect, i: usize, grid: &Grid<u16>) {
         Constraint::Fill(1),
         Constraint::Fill(1),
     ]);
-    // let areas = layout.areas(area);
-    // for j in 0..4 {
     for (j, area) in layout.areas::<4>(area).iter().enumerate() {
-        let tile_text = display_tile_value(*grid.get(i, j).unwrap());
-        frame.render_widget(Paragraph::new(tile_text), *area);
+        let exponent = *grid.get(i, j).unwrap();
+        let tile_text = display_tile_value(exponent);
+        let style = tile_style(exponent);
+        frame.render_widget(Paragraph::new(tile_text).style(style), *area);
     }
+}
+
+fn tile_style(exponent: u16) -> Style {
+    let fg = match exponent {
+        0  => Color::DarkGray,
+        1  => Color::White,             // 2
+        2  => Color::Cyan,              // 4
+        3  => Color::LightCyan,         // 8
+        4  => Color::Blue,              // 16
+        5  => Color::LightBlue,         // 32
+        6  => Color::Green,             // 64
+        7  => Color::LightGreen,        // 128
+        8  => Color::Magenta,           // 256
+        9  => Color::LightMagenta,      // 512
+        10 => Color::Yellow,            // 1024
+        _  => Color::Red,               // 2048+
+    };
+    Style::default().fg(fg)
 }
 
 fn display_tile_value(exponent: u16) -> String {
@@ -75,7 +93,8 @@ fn display_tile_value(exponent: u16) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{display_tile_value, state_overlay_text};
+    use super::{display_tile_value, state_overlay_text, tile_style};
+    use ratatui::style::Color;
     use twentyfourtyeight::model::State;
 
     #[test]
@@ -103,5 +122,17 @@ mod tests {
     fn overlay_hidden_for_running_and_continue_states() {
         assert!(state_overlay_text(State::Running).is_none());
         assert!(state_overlay_text(State::WonContinue).is_none());
+    }
+
+    #[test]
+    fn tile_colors_vary_by_exponent() {
+        // Empty tile should be dim.
+        assert_eq!(tile_style(0).fg, Some(Color::DarkGray));
+        // 2048 (exponent 11) should be red.
+        assert_eq!(tile_style(11).fg, Some(Color::Red));
+        // 1024 (exponent 10) should be yellow.
+        assert_eq!(tile_style(10).fg, Some(Color::Yellow));
+        // Lower tiles should differ from 2048.
+        assert_ne!(tile_style(1).fg, tile_style(11).fg);
     }
 }

@@ -13,9 +13,21 @@ pub enum Message {
     Compress(Direction),
 }
 
+fn grid_snapshot(model: &Model) -> Vec<u16> {
+    let mut snapshot = Vec::with_capacity(model.grid.height() * model.grid.width());
+    for i in 0..model.grid.height() {
+        for j in 0..model.grid.width() {
+            snapshot.push(*model.grid.value(i, j));
+        }
+    }
+    snapshot
+}
+
 pub fn update(model: &mut Model, message: Message) -> Option<Message> {
     match message {
         Message::Compress(dir) => {
+            let before = grid_snapshot(model);
+
             let value = match dir {
                 Direction::Left => compress_left(model),
                 Direction::Right => compress_right(model),
@@ -25,8 +37,10 @@ pub fn update(model: &mut Model, message: Message) -> Option<Message> {
 
             model.score += value;
 
-            // Fill a new square
-            model.generate_new_value();
+            // Only spawn a new tile if the board actually changed
+            if grid_snapshot(model) != before {
+                model.generate_new_value();
+            }
 
             if highest_tile(model) == 11 {
                 if !matches!(model.state, State::WonContinue) {
@@ -310,5 +324,65 @@ mod tests {
         let _ = update(&mut model, Message::Compress(Direction::Left));
 
         assert!(matches!(model.state, State::Lost));
+    }
+
+    #[test]
+    fn no_op_move_does_not_spawn_a_tile() {
+        // All tiles are left-aligned; pressing Left is a no-op.
+        let mut model = Model::new();
+        clear_grid(&mut model);
+        set_grid(
+            &mut model,
+            [
+                [1, 0, 0, 0],
+                [2, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+        );
+
+        let non_zero_before: usize = (0..4)
+            .flat_map(|i| (0..4).map(move |j| (i, j)))
+            .filter(|&(i, j)| *model.grid.value(i, j) != 0)
+            .count();
+
+        let _ = update(&mut model, Message::Compress(Direction::Left));
+
+        let non_zero_after: usize = (0..4)
+            .flat_map(|i| (0..4).map(move |j| (i, j)))
+            .filter(|&(i, j)| *model.grid.value(i, j) != 0)
+            .count();
+
+        assert_eq!(non_zero_before, non_zero_after);
+    }
+
+    #[test]
+    fn effective_move_spawns_a_tile() {
+        // Tiles are right-aligned; pressing Left slides them and should spawn a new tile.
+        let mut model = Model::new();
+        clear_grid(&mut model);
+        set_grid(
+            &mut model,
+            [
+                [0, 0, 0, 1],
+                [0, 0, 0, 2],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+        );
+
+        let non_zero_before: usize = (0..4)
+            .flat_map(|i| (0..4).map(move |j| (i, j)))
+            .filter(|&(i, j)| *model.grid.value(i, j) != 0)
+            .count();
+
+        let _ = update(&mut model, Message::Compress(Direction::Left));
+
+        let non_zero_after: usize = (0..4)
+            .flat_map(|i| (0..4).map(move |j| (i, j)))
+            .filter(|&(i, j)| *model.grid.value(i, j) != 0)
+            .count();
+
+        assert_eq!(non_zero_after, non_zero_before + 1);
     }
 }

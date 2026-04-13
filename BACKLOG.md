@@ -125,7 +125,7 @@
   - Only spawn if state changed (value > 0 or any cell moved)
   - Return early or skip spawn on no-op move
 - **Impact**: No-op moves (e.g., pressing left when all tiles are left-aligned) do not consume a turn
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 5.2 Verify fixed 4×4 assumptions are intentional
 - **Files**: [src/model.rs](src/model.rs#L35), [src/model.rs](src/model.rs#L36)

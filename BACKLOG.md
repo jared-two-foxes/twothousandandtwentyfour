@@ -159,7 +159,7 @@
 ### 6.4 Add help footer
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L6)
 - **Add**: Small line showing: "↑↓←→ Move | [Q]uit | [C]ontinue (after win) | [R]estart"
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ---
 

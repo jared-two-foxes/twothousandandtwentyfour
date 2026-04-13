@@ -15,8 +15,9 @@ pub fn view(model: &Model, high_score: u32, frame: &mut Frame) {
         Constraint::Fill(1),
         Constraint::Fill(1),
         Constraint::Fill(1),
+        Constraint::Length(1),
     ]);
-    let [header, row1, row2, row3, row4] = vertical_layout.areas(frame.area());
+    let [header, row1, row2, row3, row4, footer] = vertical_layout.areas(frame.area());
 
     let score_text = format!("Score: {}    High Score: {}", model.score, high_score);
     frame.render_widget(Paragraph::new(score_text), header);
@@ -25,6 +26,11 @@ pub fn view(model: &Model, high_score: u32, frame: &mut Frame) {
     draw_row(frame, row2, 1, &model.grid);
     draw_row(frame, row3, 2, &model.grid);
     draw_row(frame, row4, 3, &model.grid);
+
+    frame.render_widget(
+        Paragraph::new("\u{2191}\u{2193}\u{2190}\u{2192} Move | [Q]uit | [C]ontinue (after win) | [R]estart"),
+        footer,
+    );
 }
 
 fn state_overlay_text(state: State) -> Option<&'static str> {

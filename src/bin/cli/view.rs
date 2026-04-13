@@ -3,26 +3,28 @@ use twentyfourtyeight::{grid::Grid, model::Model, model::State};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
-pub fn view(model: &Model, frame: &mut Frame) {
+pub fn view(model: &Model, high_score: u32, frame: &mut Frame) {
     if let Some(text) = state_overlay_text(model.state) {
         draw_overlay(frame, text);
         return;
     }
 
     let vertical_layout = Layout::vertical([
+        Constraint::Length(1),
         Constraint::Fill(1),
         Constraint::Fill(1),
         Constraint::Fill(1),
         Constraint::Fill(1),
     ]);
-    let [row1, row2, row3, row4] = vertical_layout.areas(frame.area());
+    let [header, row1, row2, row3, row4] = vertical_layout.areas(frame.area());
+
+    let score_text = format!("Score: {}    High Score: {}", model.score, high_score);
+    frame.render_widget(Paragraph::new(score_text), header);
 
     draw_row(frame, row1, 0, &model.grid);
     draw_row(frame, row2, 1, &model.grid);
     draw_row(frame, row3, 2, &model.grid);
     draw_row(frame, row4, 3, &model.grid);
-
-    //frame.render_widget();
 }
 
 fn state_overlay_text(state: State) -> Option<&'static str> {

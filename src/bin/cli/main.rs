@@ -39,8 +39,12 @@ impl App {
                 None
             }
             Message::ModelMessage(model_message) => {
-                twentyfourtyeight::actions::update(&mut self.model, model_message)
-                    .map(|m| Message::ModelMessage(m))
+                let result = twentyfourtyeight::actions::update(&mut self.model, model_message)
+                    .map(|m| Message::ModelMessage(m));
+                if matches!(self.model.state, State::Won | State::Lost) {
+                    self.high_score = self.high_score.max(self.model.score);
+                }
+                result
             }
         }
     }
@@ -55,7 +59,7 @@ fn main() -> Result<()> {
             break;
         }
 
-        terminal.draw(|f| view::view(&mut app.model, f))?;
+        terminal.draw(|f| view::view(&app.model, app.high_score, f))?;
 
         let mut current_msg = filter_message_for_state(app.model.state, handle_event(&app)?);
 
@@ -192,5 +196,61 @@ mod tests {
         assert!(matches!(app.model.state, State::Running));
         assert_eq!(app.model.score, 0);
         assert!(!app.should_quit);
+    }
+
+    #[test]
+    fn high_score_updated_when_game_is_lost() {
+        let mut app = App::new();
+        // Construct a full board with no valid moves so the next compress triggers Lost.
+        for i in 0..app.model.grid.height() {
+            for j in 0..app.model.grid.width() {
+                *app.model.grid.value_mut(i, j) = 0;
+            }
+        }
+        let values: [[u16; 4]; 4] = [
+            [1, 2, 3, 4],
+            [2, 3, 4, 1],
+            [3, 4, 1, 2],
+            [4, 1, 2, 3],
+        ];
+        for (i, row) in values.iter().enumerate() {
+            for (j, &v) in row.iter().enumerate() {
+                *app.model.grid.value_mut(i, j) = v;
+            }
+        }
+        app.model.score = 512;
+        app.high_score = 256;
+
+        let _ = app.update(Message::ModelMessage(ModelMessage::Compress(Direction::Left)));
+
+        assert!(matches!(app.model.state, State::Lost));
+        assert_eq!(app.high_score, 512);
+    }
+
+    #[test]
+    fn high_score_not_downgraded_by_lower_score() {
+        let mut app = App::new();
+        app.high_score = 1024;
+        for i in 0..app.model.grid.height() {
+            for j in 0..app.model.grid.width() {
+                *app.model.grid.value_mut(i, j) = 0;
+            }
+        }
+        let values: [[u16; 4]; 4] = [
+            [1, 2, 3, 4],
+            [2, 3, 4, 1],
+            [3, 4, 1, 2],
+            [4, 1, 2, 3],
+        ];
+        for (i, row) in values.iter().enumerate() {
+            for (j, &v) in row.iter().enumerate() {
+                *app.model.grid.value_mut(i, j) = v;
+            }
+        }
+        app.model.score = 100;
+
+        let _ = app.update(Message::ModelMessage(ModelMessage::Compress(Direction::Left)));
+
+        assert_eq!(app.high_score, 1024);
     }
 }

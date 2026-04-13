@@ -143,12 +143,12 @@
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L6)
 - **Add**: Header or footer rendering score, high score, and board info
 - **Note**: High score field exists in [src/bin/cli/main.rs](src/bin/cli/main.rs#L10) but is never updated or displayed
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 6.2 Update high score on game end
 - **File**: [src/bin/cli/main.rs](src/bin/cli/main.rs)
 - **Add**: When state becomes Lost/Won, update `app.high_score = app.high_score.max(app.model.score)`
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 6.3 Improve tile styling and colors
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L23)

@@ -109,7 +109,7 @@
 ### 4.3 Support restart functionality
 - **File**: [src/bin/cli/main.rs](src/bin/cli/main.rs)
 - **Add**: Handle 'r' key to reset `app.model = Model::new()` and `app.should_quit = false`
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ---
 

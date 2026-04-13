@@ -35,6 +35,7 @@ impl App {
             }
             Message::Restart => {
                 self.model = Model::new();
+                self.should_quit = false;
                 None
             }
             Message::ModelMessage(model_message) => {
@@ -177,5 +178,19 @@ mod tests {
         );
 
         assert!(msg.is_none());
+    }
+
+    #[test]
+    fn restart_resets_model_and_quit_flag() {
+        let mut app = App::new();
+        app.should_quit = true;
+        app.model.state = State::Lost;
+        app.model.score = 128;
+
+        let _ = app.update(Message::Restart);
+
+        assert!(matches!(app.model.state, State::Running));
+        assert_eq!(app.model.score, 0);
+        assert!(!app.should_quit);
     }
 }

@@ -43,7 +43,7 @@
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L33)
 - **Fix**: Convert exponent to displayed value: `if exp == 0 { "" } else { format!("{}", 2u32.pow(exp as u32)) }`
 - **Impact**: Tiles display correctly as 2, 4, 8, 16, ..., 2048
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 2.3 Ensure score reflects *displayed* tile value
 - **File**: [src/actions.rs](src/actions.rs#L26)

@@ -66,7 +66,7 @@
   - Set state to Won if `highest_tile == 11` (2048 reached)
   - Set state to Lost if `!check_for_valid_moves()` (no moves available)
   - Otherwise stay Running
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 3.2 Extend State enum
 - **File**: [src/model.rs](src/model.rs#L6)

@@ -28,7 +28,7 @@ pub fn update(model: &mut Model, message: Message) -> Option<Message> {
             // Fill a new square
             model.generate_new_value();
 
-            if highest_tile(model) == 11 || model.check_for_valid_moves() {
+            if highest_tile(model) == 11 || !model.check_for_valid_moves() {
                 model.state = State::Done;
             }
 
@@ -191,6 +191,14 @@ mod tests {
         }
     }
 
+    fn set_grid(model: &mut Model, values: [[u16; 4]; 4]) {
+        for (i, row) in values.iter().enumerate() {
+            for (j, value) in row.iter().enumerate() {
+                *model.grid.value_mut(i, j) = *value;
+            }
+        }
+    }
+
     #[test]
     fn compress_row_left_merges_exponents() {
         let mut row = vec![1u16, 1u16, 0u16, 0u16];
@@ -241,5 +249,62 @@ mod tests {
                 assert!(value <= 11);
             }
         }
+    }
+
+    #[test]
+    fn update_keeps_running_when_moves_remain() {
+        let mut model = Model::new();
+        clear_grid(&mut model);
+        set_grid(
+            &mut model,
+            [
+                [1, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+        );
+
+        let _ = update(&mut model, Message::Compress(Direction::Left));
+
+        assert!(matches!(model.state, State::Running));
+    }
+
+    #[test]
+    fn update_sets_done_when_2048_reached() {
+        let mut model = Model::new();
+        clear_grid(&mut model);
+        set_grid(
+            &mut model,
+            [
+                [10, 10, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+        );
+
+        let _ = update(&mut model, Message::Compress(Direction::Left));
+
+        assert!(matches!(model.state, State::Done));
+    }
+
+    #[test]
+    fn update_sets_done_when_no_valid_moves_remain() {
+        let mut model = Model::new();
+        clear_grid(&mut model);
+        set_grid(
+            &mut model,
+            [
+                [1, 2, 3, 4],
+                [2, 3, 4, 1],
+                [3, 4, 1, 2],
+                [4, 1, 2, 3],
+            ],
+        );
+
+        let _ = update(&mut model, Message::Compress(Direction::Left));
+
+        assert!(matches!(model.state, State::Done));
     }
 }

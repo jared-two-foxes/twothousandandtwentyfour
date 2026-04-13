@@ -29,6 +29,14 @@ impl App {
                 self.should_quit = true;
                 None
             }
+            Message::Continue => {
+                self.model.state = State::WonContinue;
+                None
+            }
+            Message::Restart => {
+                self.model = Model::new();
+                None
+            }
             Message::ModelMessage(model_message) => {
                 twentyfourtyeight::actions::update(&mut self.model, model_message)
                     .map(|m| Message::ModelMessage(m))
@@ -62,6 +70,8 @@ fn main() -> Result<()> {
 // And rename this like ApplicaitonMessage or something?
 enum Message {
     ModelMessage(ModelMessage), //< Maybe rename this game message.
+    Continue,
+    Restart,
     Quit,
 }
 
@@ -77,8 +87,18 @@ fn handle_event(app: &App) -> anyhow::Result<Option<Message>> {
 }
 
 fn handle_key(state: State, key: event::KeyEvent) -> Option<Message> {
-    if matches!(state, State::Won | State::Lost) {
+    if matches!(state, State::Won) {
         return match key.code {
+            KeyCode::Char('c') => Some(Message::Continue),
+            KeyCode::Char('r') => Some(Message::Restart),
+            KeyCode::Char('q') => Some(Message::Quit),
+            _ => None,
+        };
+    }
+
+    if matches!(state, State::Lost) {
+        return match key.code {
+            KeyCode::Char('r') => Some(Message::Restart),
             KeyCode::Char('q') => Some(Message::Quit),
             _ => None,
         };
@@ -132,5 +152,30 @@ mod tests {
         let filtered = filter_message_for_state(State::Lost, Some(Message::Quit));
 
         assert!(matches!(filtered, Some(Message::Quit)));
+    }
+
+    #[test]
+    fn won_state_accepts_continue_and_restart() {
+        let continue_msg = handle_key(
+            State::Won,
+            event::KeyEvent::new(KeyCode::Char('c'), event::KeyModifiers::NONE),
+        );
+        let restart_msg = handle_key(
+            State::Won,
+            event::KeyEvent::new(KeyCode::Char('r'), event::KeyModifiers::NONE),
+        );
+
+        assert!(matches!(continue_msg, Some(Message::Continue)));
+        assert!(matches!(restart_msg, Some(Message::Restart)));
+    }
+
+    #[test]
+    fn lost_state_blocks_continue() {
+        let msg = handle_key(
+            State::Lost,
+            event::KeyEvent::new(KeyCode::Char('c'), event::KeyModifiers::NONE),
+        );
+
+        assert!(msg.is_none());
     }
 }

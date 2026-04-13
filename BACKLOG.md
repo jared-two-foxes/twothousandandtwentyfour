@@ -96,7 +96,7 @@
   - If state is Won, listen for 'c' (continue) or 'q' (quit) or 'r' (restart)
   - If state is WonContinue, treat like Running (allow moves)
   - If state is Lost, listen for 'r' (restart) or 'q' (quit)
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 4.2 Add win/loss overlay to view
 - **File**: [src/bin/cli/view.rs](src/bin/cli/view.rs#L6)
@@ -104,7 +104,7 @@
   - Conditional rendering of game board or win/loss screen
   - Win screen: "You reached 2048! [C]ontinue or [Q]uit?"
   - Loss screen: "Game Over. No moves left. [R]estart or [Q]uit?"
-- **Status**: Not started
+- **Status**: ✅ Completed
 
 ### 4.3 Support restart functionality
 - **File**: [src/bin/cli/main.rs](src/bin/cli/main.rs)

@@ -1,9 +1,14 @@
-use twentyfourtyeight::{grid::Grid, model::Model};
+use twentyfourtyeight::{grid::Grid, model::Model, model::State};
 
 use ratatui::prelude::*;
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Block, Borders, Paragraph};
 
 pub fn view(model: &Model, frame: &mut Frame) {
+    if let Some(text) = state_overlay_text(model.state) {
+        draw_overlay(frame, text);
+        return;
+    }
+
     let vertical_layout = Layout::vertical([
         Constraint::Fill(1),
         Constraint::Fill(1),
@@ -18,6 +23,23 @@ pub fn view(model: &Model, frame: &mut Frame) {
     draw_row(frame, row4, 3, &model.grid);
 
     //frame.render_widget();
+}
+
+fn state_overlay_text(state: State) -> Option<&'static str> {
+    match state {
+        State::Won => Some("You reached 2048! [C]ontinue or [Q]uit or [R]estart?"),
+        State::Lost => Some("Game Over. No moves left. [R]estart or [Q]uit?"),
+        State::Running | State::WonContinue => None,
+    }
+}
+
+fn draw_overlay(frame: &mut Frame, text: &str) {
+    let block = Block::default().borders(Borders::ALL).title("2048");
+    let paragraph = Paragraph::new(text)
+        .block(block)
+        .alignment(Alignment::Center);
+
+    frame.render_widget(paragraph, frame.area());
 }
 
 fn draw_row(frame: &mut Frame, area: Rect, i: usize, grid: &Grid<u16>) {
@@ -45,7 +67,8 @@ fn display_tile_value(exponent: u16) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::display_tile_value;
+    use super::{display_tile_value, state_overlay_text};
+    use twentyfourtyeight::model::State;
 
     #[test]
     fn renders_empty_tile_as_blank() {
@@ -57,5 +80,20 @@ mod tests {
         assert_eq!(display_tile_value(1), "2");
         assert_eq!(display_tile_value(2), "4");
         assert_eq!(display_tile_value(11), "2048");
+    }
+
+    #[test]
+    fn overlay_text_for_won_and_lost_states() {
+        let won = state_overlay_text(State::Won);
+        let lost = state_overlay_text(State::Lost);
+
+        assert!(won.is_some());
+        assert!(lost.is_some());
+    }
+
+    #[test]
+    fn overlay_hidden_for_running_and_continue_states() {
+        assert!(state_overlay_text(State::Running).is_none());
+        assert!(state_overlay_text(State::WonContinue).is_none());
     }
 }

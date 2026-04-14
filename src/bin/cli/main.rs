@@ -1,7 +1,7 @@
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode};
 use std::time::Duration;
-use twentyfourtyeight::{actions::Direction, model::State, Message as ModelMessage, Model};
+use twentyfourtyeight::{actions::Direction, model::State, Message as ActionMessage, Model};
 
 mod view;
 
@@ -23,24 +23,24 @@ impl App {
     // One thing I like about free functions is that it makes it clear at the call site if
     // something is being consumed, borrowed, or mutably borrowed which is not always clear
     // otherwise
-    fn update(&mut self, message: Message) -> Option<Message> {
+    fn update(&mut self, message: ApplicationMessage) -> Option<ApplicationMessage> {
         match message {
-            Message::Quit => {
+            ApplicationMessage::Quit => {
                 self.should_quit = true;
                 None
             }
-            Message::Continue => {
+            ApplicationMessage::Continue => {
                 self.model.state = State::WonContinue;
                 None
             }
-            Message::Restart => {
+            ApplicationMessage::Restart => {
                 self.model = Model::new();
                 self.should_quit = false;
                 None
             }
-            Message::ModelMessage(model_message) => {
-                let result = twentyfourtyeight::actions::update(&mut self.model, model_message)
-                    .map(|m| Message::ModelMessage(m));
+            ApplicationMessage::GameAction(action_message) => {
+                let result = twentyfourtyeight::actions::update(&mut self.model, action_message)
+                    .map(|m| ApplicationMessage::GameAction(m));
                 if matches!(self.model.state, State::Won | State::Lost) {
                     self.high_score = self.high_score.max(self.model.score);
                 }
@@ -72,15 +72,14 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-// And rename this like ApplicaitonMessage or something?
-enum Message {
-    ModelMessage(ModelMessage), //< Maybe rename this game message.
+enum ApplicationMessage {
+    GameAction(ActionMessage),
     Continue,
     Restart,
     Quit,
 }
 
-fn handle_event(app: &App) -> anyhow::Result<Option<Message>> {
+fn handle_event(app: &App) -> anyhow::Result<Option<ApplicationMessage>> {
     if event::poll(Duration::from_millis(250))? {
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
@@ -91,43 +90,46 @@ fn handle_event(app: &App) -> anyhow::Result<Option<Message>> {
     Ok(None)
 }
 
-fn handle_key(state: State, key: event::KeyEvent) -> Option<Message> {
+fn handle_key(state: State, key: event::KeyEvent) -> Option<ApplicationMessage> {
     if matches!(state, State::Won) {
         return match key.code {
-            KeyCode::Char('c') => Some(Message::Continue),
-            KeyCode::Char('r') => Some(Message::Restart),
-            KeyCode::Char('q') => Some(Message::Quit),
+            KeyCode::Char('c') => Some(ApplicationMessage::Continue),
+            KeyCode::Char('r') => Some(ApplicationMessage::Restart),
+            KeyCode::Char('q') => Some(ApplicationMessage::Quit),
             _ => None,
         };
     }
 
     if matches!(state, State::Lost) {
         return match key.code {
-            KeyCode::Char('r') => Some(Message::Restart),
-            KeyCode::Char('q') => Some(Message::Quit),
+            KeyCode::Char('r') => Some(ApplicationMessage::Restart),
+            KeyCode::Char('q') => Some(ApplicationMessage::Quit),
             _ => None,
         };
     }
 
     match key.code {
-        KeyCode::Left => Some(Message::ModelMessage(ModelMessage::Compress(
+        KeyCode::Left => Some(ApplicationMessage::GameAction(ActionMessage::Compress(
             Direction::Left,
         ))),
-        KeyCode::Right => Some(Message::ModelMessage(ModelMessage::Compress(
+        KeyCode::Right => Some(ApplicationMessage::GameAction(ActionMessage::Compress(
             Direction::Right,
         ))),
-        KeyCode::Up => Some(Message::ModelMessage(ModelMessage::Compress(Direction::Up))),
-        KeyCode::Down => Some(Message::ModelMessage(ModelMessage::Compress(
+        KeyCode::Up => Some(ApplicationMessage::GameAction(ActionMessage::Compress(Direction::Up))),
+        KeyCode::Down => Some(ApplicationMessage::GameAction(ActionMessage::Compress(
             Direction::Down,
         ))),
-        KeyCode::Char('q') => Some(Message::Quit),
+        KeyCode::Char('q') => Some(ApplicationMessage::Quit),
         _ => None,
     }
 }
 
-fn filter_message_for_state(state: State, message: Option<Message>) -> Option<Message> {
+fn filter_message_for_state(
+    state: State,
+    message: Option<ApplicationMessage>,
+) -> Option<ApplicationMessage> {
     match (state, message) {
-        (State::Won | State::Lost, Some(Message::ModelMessage(_))) => None,
+        (State::Won | State::Lost, Some(ApplicationMessage::GameAction(_))) => None,
         (_, msg) => msg,
     }
 }
@@ -138,7 +140,7 @@ mod tests {
 
     #[test]
     fn blocks_model_input_when_won() {
-        let msg = Some(Message::ModelMessage(ModelMessage::Compress(Direction::Left)));
+        let msg = Some(ApplicationMessage::GameAction(ActionMessage::Compress(Direction::Left)));
         let filtered = filter_message_for_state(State::Won, msg);
 
         assert!(filtered.is_none());
@@ -146,17 +148,17 @@ mod tests {
 
     #[test]
     fn allows_model_input_when_won_continue() {
-        let msg = Some(Message::ModelMessage(ModelMessage::Compress(Direction::Left)));
+        let msg = Some(ApplicationMessage::GameAction(ActionMessage::Compress(Direction::Left)));
         let filtered = filter_message_for_state(State::WonContinue, msg);
 
-        assert!(matches!(filtered, Some(Message::ModelMessage(_))));
+        assert!(matches!(filtered, Some(ApplicationMessage::GameAction(_))));
     }
 
     #[test]
     fn allows_quit_when_lost() {
-        let filtered = filter_message_for_state(State::Lost, Some(Message::Quit));
+        let filtered = filter_message_for_state(State::Lost, Some(ApplicationMessage::Quit));
 
-        assert!(matches!(filtered, Some(Message::Quit)));
+        assert!(matches!(filtered, Some(ApplicationMessage::Quit)));
     }
 
     #[test]
@@ -170,8 +172,8 @@ mod tests {
             event::KeyEvent::new(KeyCode::Char('r'), event::KeyModifiers::NONE),
         );
 
-        assert!(matches!(continue_msg, Some(Message::Continue)));
-        assert!(matches!(restart_msg, Some(Message::Restart)));
+        assert!(matches!(continue_msg, Some(ApplicationMessage::Continue)));
+        assert!(matches!(restart_msg, Some(ApplicationMessage::Restart)));
     }
 
     #[test]
@@ -191,7 +193,7 @@ mod tests {
         app.model.state = State::Lost;
         app.model.score = 128;
 
-        let _ = app.update(Message::Restart);
+        let _ = app.update(ApplicationMessage::Restart);
 
         assert!(matches!(app.model.state, State::Running));
         assert_eq!(app.model.score, 0);
@@ -221,7 +223,7 @@ mod tests {
         app.model.score = 512;
         app.high_score = 256;
 
-        let _ = app.update(Message::ModelMessage(ModelMessage::Compress(Direction::Left)));
+        let _ = app.update(ApplicationMessage::GameAction(ActionMessage::Compress(Direction::Left)));
 
         assert!(matches!(app.model.state, State::Lost));
         assert_eq!(app.high_score, 512);
@@ -249,7 +251,7 @@ mod tests {
         }
         app.model.score = 100;
 
-        let _ = app.update(Message::ModelMessage(ModelMessage::Compress(Direction::Left)));
+        let _ = app.update(ApplicationMessage::GameAction(ActionMessage::Compress(Direction::Left)));
 
         assert_eq!(app.high_score, 1024);
     }

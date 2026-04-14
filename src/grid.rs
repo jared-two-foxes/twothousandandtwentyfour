@@ -62,25 +62,6 @@ impl<'a, T> IndexMut<usize> for RowMut<'a, T> {
     }
 }
 
-//@todo: could impl an iterator object that is created from GridRow, a GridRowIter
-/*struct RowIterator<'a, T> {
-    row: &'a Row<'a, T>,
-    index: usize,
-}
-
-impl<'a, T> Iterator for GridRow<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.row > self.grid.rows().len() {
-            return None;
-        }
-        let n = self.grid.get(self.row, self.index);
-        self.index += 1;
-        n
-    }
-}*/
-
 pub struct Column<'a, T> {
     grid: &'a Grid<T>,
     column: usize,

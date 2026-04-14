@@ -12,6 +12,7 @@ pub enum State {
 }
 
 pub struct Model {
+    // Tile values store exponents: 0 = empty, 1 = 2, 2 = 4, ..., 11 = 2048.
     pub grid: Grid<u16>,
     rng: rand::rngs::ThreadRng,
     pub state: State,
@@ -33,7 +34,7 @@ impl Model {
     }
 
     pub fn empty_nodes(&self) -> Vec<Vec2> {
-        // find an empty square, and add a value to it.
+        // The game board is intentionally fixed at 4x4.
         let mut empty_nodes = Vec::new();
         for i in 0..4 {
             for j in 0..4 {
@@ -67,7 +68,7 @@ impl Model {
         false
     }
 
-    // Checks if there are anyu remaining valid moves
+    // Returns true if at least one legal move remains.
     pub fn check_for_valid_moves(&self) -> bool {
         !self.empty_nodes().is_empty() || self.adjacent_by_column() || self.adjacent_by_row()
     }

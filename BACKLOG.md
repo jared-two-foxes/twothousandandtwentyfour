@@ -9,30 +9,6 @@
 
 ---
 
-## 5. Enforce Correct Move Semantics
-
-**Priority: HIGH**
-
-### 5.2 Verify fixed 4×4 assumptions are intentional
-- **Files**: [src/model.rs](src/model.rs#L35), [src/model.rs](src/model.rs#L36)
-- **Current**: Hardcoded `for i in 0..4`
-- **Action**: Add a comment confirming board is always 4×4; consider using `self.grid.width()` for clarity
-- **Status**: Not started
-
----
-
-## 7. Replace Duplicate and Dead Logic
-
-**Priority: MEDIUM**
-
-### 7.1 Remove or integrate has_valid_move()
-- **File**: [src/model.rs](src/model.rs#L98)
-- **Issue**: Duplicate of `check_for_valid_moves()`; contains broken typo and private-field access
-- **Fix**: Delete `has_valid_move()` entirely; use `check_for_valid_moves()` as single source of truth
-- **Status**: Completed
-
----
-
 ## 9. Final Hardening
 
 **Priority: LOW**
@@ -50,11 +26,11 @@
 ### 9.3 Clean up TODO and FIXME comments
 - **Files**: All source files
 - **Action**: Remove inline TODOs; replace with documented decisions or close resolved items
-- **Status**: Not started
+- **Status**: Completed
 
 ### 9.4 Review naming and comments
 - **Clarify**: Message enum names (TODO about renaming to `ApplicationMessage`), confusing variable names, exponent-model documentation
-- **Status**: Not started
+- **Status**: Completed
 
 ---
 

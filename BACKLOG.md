@@ -29,7 +29,7 @@
 - **File**: [src/model.rs](src/model.rs#L98)
 - **Issue**: Duplicate of `check_for_valid_moves()`; contains broken typo and private-field access
 - **Fix**: Delete `has_valid_move()` entirely; use `check_for_valid_moves()` as single source of truth
-- **Status**: Not started
+- **Status**: Completed
 
 ---
 

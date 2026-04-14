@@ -98,42 +98,6 @@ impl Model {
         }
     }
 
-fn has_valid_move(&self) -> bool {
-    let rows = self.grid.height();
-    let cols = self.grid.width();
-
-    // Check for zeros in the grid (empty spaces)
-    for i in 0..rows {
-        for j in 0..cols {
-            if let Some(&val) = self.grid.get(i, j) {
-                if val == 0 {
-                    return true;
-                }
-            }
-        }
-    }
-
-    // Check for adjacent values that are the same
-    for row in 0..rows {
-        for col in 0..cols {
-            let value = self.grid.value(row, col);
-
-            // Check right neighbor
-            if col + 1 < cols && value == self.grid.value(row, col + 1) {
-                return true;
-            }
-
-            // Check bottom neighbor
-            if row + 1 < rows && value == self.grid.value(row + 1, col) {
-                return true;
-            }
-        }
-    }
-
-    // No valid move found
-    false
-}
-
 }
 
 #[cfg(test)]
